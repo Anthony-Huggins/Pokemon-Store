@@ -8,14 +8,39 @@ import org.springframework.context.annotation.Bean;
 import com.skillstorm.pokemonstore.repositories.CardSetRepository;
 import com.skillstorm.pokemonstore.services.TcgDexSyncService;
 
+/**
+ * The main entry point for the Pokémon Store Inventory Management System.
+ * <p>
+ * This class bootstraps the Spring Boot application and configures the initial startup behavior.
+ * It includes a {@link CommandLineRunner} to automatically seed the database with Pokémon card data
+ * from the TCGdex API if the local database is detected as empty.
+ * </p>
+ */
 @SpringBootApplication
 public class PokemonstoreApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(PokemonstoreApplication.class, args);
-	}
+    /**
+     * The main method that launches the Spring Boot application.
+     *
+     * @param args Command line arguments passed to the application.
+     */
+    public static void main(String[] args) {
+        SpringApplication.run(PokemonstoreApplication.class, args);
+    }
 
-	@Bean
+    /**
+     * Defines a startup task that checks the database state and performs initial data seeding.
+     * <p>
+     * This bean runs automatically after the Spring application context is loaded.
+     * It checks if the {@link CardSetRepository} is empty. If it is, it triggers a full
+     * synchronization via {@link TcgDexSyncService#syncAllSets()}.
+     * </p>
+     *
+     * @param service       The service used to sync data from the TCGdex API.
+     * @param setRepository The repository used to check existing data counts.
+     * @return A CommandLineRunner lambda that executes the seeding logic.
+     */
+    @Bean
     CommandLineRunner run(TcgDexSyncService service, CardSetRepository setRepository) {
         return args -> {
             // Check if we already have data to avoid re-syncing on every restart
@@ -26,7 +51,7 @@ public class PokemonstoreApplication {
                 service.syncAllSets();
             } else {
                 System.out.println("Database already contains " + setCount + " sets. Skipping initial sync.");
-                // If you want to force a sync, you can delete the db file or drop tables
+                // If you want to force a sync, you can delete the db file or drop tables manually
             }
         };
     }
