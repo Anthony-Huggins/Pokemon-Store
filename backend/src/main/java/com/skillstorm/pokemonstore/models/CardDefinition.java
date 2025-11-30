@@ -55,7 +55,8 @@ public class CardDefinition {
         this.category = category;
         this.rarity = rarity;
         this.hp = hp;
-        this.types = types;
+        
+        this.types = (types != null) ? new ArrayList<>(types) : new ArrayList<>();
     }
 
     // --- Getters and Setters ---
