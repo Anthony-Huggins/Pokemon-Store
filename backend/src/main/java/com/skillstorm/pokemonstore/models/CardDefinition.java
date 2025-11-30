@@ -1,6 +1,9 @@
 package com.skillstorm.pokemonstore.models;
 
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -29,15 +32,21 @@ public class CardDefinition {
 
     private Integer hp;
 
-    @Column(name = "primary_type")
-    private String primaryType;
+    // --- List mapped to a separate table ---
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "card_definition_types", 
+        joinColumns = @JoinColumn(name = "card_definition_id")
+    )
+    @Column(name = "type_name")
+    private List<String> types = new ArrayList<>();
 
     // --- Constructors ---
 
     public CardDefinition() {
     }
 
-    public CardDefinition(String id, CardSet set, String localId, String name, String imageUrl, String category, String rarity, Integer hp, String primaryType) {
+    public CardDefinition(String id, CardSet set, String localId, String name, String imageUrl, String category, String rarity, Integer hp, List<String> types) {
         this.id = id;
         this.set = set;
         this.localId = localId;
@@ -46,7 +55,7 @@ public class CardDefinition {
         this.category = category;
         this.rarity = rarity;
         this.hp = hp;
-        this.primaryType = primaryType;
+        this.types = types;
     }
 
     // --- Getters and Setters ---
@@ -115,12 +124,12 @@ public class CardDefinition {
         this.hp = hp;
     }
 
-    public String getPrimaryType() {
-        return primaryType;
+    public List<String> getTypes() {
+        return types;
     }
 
-    public void setPrimaryType(String primaryType) {
-        this.primaryType = primaryType;
+    public void setTypes(List<String> types) {
+        this.types = types;
     }
 
     // --- Equals and HashCode ---
