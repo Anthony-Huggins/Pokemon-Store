@@ -1,4 +1,4 @@
-package com.skillstorm.pokemonstore.Configuration;
+package com.skillstorm.pokemonstore.configuration;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
