@@ -55,13 +55,13 @@ public class InventoryItemService {
         newItem.setCardDefinition(card);
 
         // 3. Check Capacity
-        List<InventoryItem> itemsInBox = inventoryRepo.findByStorageLocationId(locationId);
-        int currentCount = itemsInBox.stream().mapToInt(InventoryItem::getQuantity).sum();
+        long currentCount = inventoryRepo.countByStorageLocationId(location.getId());
 
-        if (currentCount + newItem.getQuantity() > location.getMaxCapacity()) {
+        // Logic: If current count (e.g., 50) is already equal to or greater than max (50), we can't add 1 more.
+        if (currentCount >= location.getMaxCapacity()) {
             throw new IllegalStateException("Capacity Exceeded! Container '" + location.getName() + 
-                                            "' has " + currentCount + "/" + location.getMaxCapacity() + 
-                                            " items. Cannot add " + newItem.getQuantity() + " more.");
+                                            "' is full (" + currentCount + "/" + location.getMaxCapacity() + 
+                                            "). Cannot add more cards.");
         }
 
         // 4. Save the item
