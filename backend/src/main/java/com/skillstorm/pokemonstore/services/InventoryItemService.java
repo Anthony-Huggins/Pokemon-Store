@@ -1,5 +1,6 @@
 package com.skillstorm.pokemonstore.services;
 
+import com.skillstorm.pokemonstore.exceptions.ResourceNotFoundException;
 import com.skillstorm.pokemonstore.models.InventoryItem;
 import com.skillstorm.pokemonstore.models.StorageLocation;
 import com.skillstorm.pokemonstore.repositories.InventoryItemRepository;
@@ -37,8 +38,8 @@ public class InventoryItemService {
         // 1. Fetch the storage location to check limits
         Integer locationId = newItem.getStorageLocation().getId();
         StorageLocation location = storageRepo.findById(locationId)
-                .orElseThrow(() -> new IllegalArgumentException("Storage Location ID " + locationId + " not found."));
-
+                .orElseThrow(() -> new ResourceNotFoundException("Storage Location ID " + locationId + " not found."));
+        
         // 2. Calculate current load in this specific container
         List<InventoryItem> itemsInBox = inventoryRepo.findByStorageLocationId(locationId);
         
@@ -72,6 +73,9 @@ public class InventoryItemService {
      * @param id The inventory item ID.
      */
     public void deleteItem(Long id) {
+        if (!inventoryRepo.existsById(id)) {
+            throw new ResourceNotFoundException("Inventory Item with ID " + id + " not found.");
+        }
         inventoryRepo.deleteById(id);
     }
 

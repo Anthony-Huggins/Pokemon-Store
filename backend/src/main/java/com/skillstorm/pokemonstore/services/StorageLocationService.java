@@ -1,5 +1,6 @@
 package com.skillstorm.pokemonstore.services;
 
+import com.skillstorm.pokemonstore.exceptions.ResourceNotFoundException;
 import com.skillstorm.pokemonstore.models.StorageLocation;
 import com.skillstorm.pokemonstore.repositories.StorageLocationRepository;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,12 @@ public class StorageLocationService {
     /**
      * Deletes a storage location by ID.
      * @param id The location ID.
+     * @throws ResourceNotFoundException if the location does not exist.
      */
     public void deleteStorageLocation(Integer id) {
+        if (!storageRepo.existsById(id)) {
+            throw new ResourceNotFoundException("Storage Location with ID " + id + " not found.");
+        }
         storageRepo.deleteById(id);
     }
 }

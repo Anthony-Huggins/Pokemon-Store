@@ -1,5 +1,6 @@
 package com.skillstorm.pokemonstore.services;
 
+import com.skillstorm.pokemonstore.exceptions.ResourceNotFoundException;
 import com.skillstorm.pokemonstore.models.Warehouse;
 import com.skillstorm.pokemonstore.repositories.WarehouseRepository;
 import org.springframework.stereotype.Service;
@@ -39,8 +40,12 @@ public class WarehouseService {
     /**
      * Deletes a warehouse by its ID.
      * @param id The warehouse ID.
+     * @throws ResourceNotFoundException if the warehouse does not exist.
      */
     public void deleteWarehouse(Integer id) {
+        if (!warehouseRepo.existsById(id)) {
+            throw new ResourceNotFoundException("Warehouse with ID " + id + " not found.");
+        }
         warehouseRepo.deleteById(id);
     }
 }
