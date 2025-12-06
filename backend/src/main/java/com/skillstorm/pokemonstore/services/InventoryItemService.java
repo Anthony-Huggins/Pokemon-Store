@@ -1,8 +1,10 @@
 package com.skillstorm.pokemonstore.services;
 
 import com.skillstorm.pokemonstore.exceptions.ResourceNotFoundException;
+import com.skillstorm.pokemonstore.models.CardDefinition;
 import com.skillstorm.pokemonstore.models.InventoryItem;
 import com.skillstorm.pokemonstore.models.StorageLocation;
+import com.skillstorm.pokemonstore.repositories.CardDefinitionRepository;
 import com.skillstorm.pokemonstore.repositories.InventoryItemRepository;
 import com.skillstorm.pokemonstore.repositories.StorageLocationRepository;
 import org.springframework.stereotype.Service;
@@ -19,10 +21,12 @@ public class InventoryItemService {
 
     private final InventoryItemRepository inventoryRepo;
     private final StorageLocationRepository storageRepo;
+    private final CardDefinitionRepository cardRepo;
 
-    public InventoryItemService(InventoryItemRepository inventoryRepo, StorageLocationRepository storageRepo) {
+    public InventoryItemService(InventoryItemRepository inventoryRepo, StorageLocationRepository storageRepo, CardDefinitionRepository cardRepo) {
         this.inventoryRepo = inventoryRepo;
         this.storageRepo = storageRepo;
+        this.cardRepo = cardRepo;
     }
 
     /**
@@ -40,14 +44,20 @@ public class InventoryItemService {
         StorageLocation location = storageRepo.findById(locationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Storage Location ID " + locationId + " not found."));
         
-        // 2. Calculate current load in this specific container
-        List<InventoryItem> itemsInBox = inventoryRepo.findByStorageLocationId(locationId);
-        
-        int currentCount = itemsInBox.stream()
-                .mapToInt(InventoryItem::getQuantity)
-                .sum();
+        newItem.setStorageLocation(location);
 
-        // 3. Check if adding this new quantity exceeds the limit
+        // 2. Fetch the FULL Card Definition
+        String cardId = newItem.getCardDefinition().getId();
+        CardDefinition card = cardRepo.findById(cardId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Card Definition ID '" + cardId + "' not found."));
+        
+        // *** FIX 2: Attach the full card object to the item ***
+        newItem.setCardDefinition(card);
+
+        // 3. Check Capacity
+        List<InventoryItem> itemsInBox = inventoryRepo.findByStorageLocationId(locationId);
+        int currentCount = itemsInBox.stream().mapToInt(InventoryItem::getQuantity).sum();
+
         if (currentCount + newItem.getQuantity() > location.getMaxCapacity()) {
             throw new IllegalStateException("Capacity Exceeded! Container '" + location.getName() + 
                                             "' has " + currentCount + "/" + location.getMaxCapacity() + 
@@ -64,7 +74,6 @@ public class InventoryItemService {
      * @return The updated item.
      */
     public InventoryItem updateItem(InventoryItem item) {
-        // (Optional Future Enhancement: Re-check capacity here if quantity increases)
         return inventoryRepo.save(item);
     }
 
