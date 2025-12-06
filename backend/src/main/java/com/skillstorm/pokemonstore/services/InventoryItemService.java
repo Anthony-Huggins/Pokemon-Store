@@ -74,7 +74,36 @@ public class InventoryItemService {
      * @return The updated item.
      */
     public InventoryItem updateItem(InventoryItem item) {
-        return inventoryRepo.save(item);
+        // 1. Fetch the existing item from DB to ensure it exists
+        InventoryItem existingItem = inventoryRepo.findById(item.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Item ID " + item.getId() + " not found."));
+
+        // 2. Handle Storage Location Change (Moving the card)
+        if (item.getStorageLocation() != null) {
+            Integer newLocId = item.getStorageLocation().getId();
+            StorageLocation newLoc = storageRepo.findById(newLocId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Location ID " + newLocId + " not found."));
+            
+            // Hydrate the new location so the UI sees the new Binder Name immediately
+            item.setStorageLocation(newLoc);
+        } else {
+            // Keep the old location if null was sent
+            item.setStorageLocation(existingItem.getStorageLocation());
+        }
+
+        // 3. Handle details that shouldn't change (like the Card Definition)
+        // We usually don't allow changing the Card Definition (a Charizard doesn't become a Pikachu)
+        // So we ensure it stays linked to the original.
+        item.setCardDefinition(existingItem.getCardDefinition());
+
+        // 4. Update other fields (Quantity, Price, etc.)
+        if (item.getSetPrice() != null) existingItem.setSetPrice(item.getSetPrice());
+        if (item.getCondition() != null) existingItem.setCondition(item.getCondition());
+        if (item.getVariant() != null) existingItem.setVariant(item.getVariant());
+        if (item.getMatchMarketPrice() != null) existingItem.setMatchMarketPrice(item.getMatchMarketPrice());
+        if (item.getMarkupPercentage() != null) existingItem.setMarkupPercentage(item.getMarkupPercentage());
+
+        return inventoryRepo.save(existingItem);
     }
 
     /**
