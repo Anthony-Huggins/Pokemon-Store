@@ -23,6 +23,19 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
     List<InventoryItem> findByStorageLocationId(Integer storageLocationId);
 
     /**
+     * Efficiently counts the total number of items stored in a specific location.
+     * <p>
+     * This method generates a {@code SELECT COUNT(*)} SQL query, which is significantly
+     * more performant than fetching a list of items and calling {@code .size()}, especially
+     * for large containers.
+     * </p>
+     *
+     * @param storageLocationId The ID of the storage container (Binder, Box, etc.).
+     * @return The total count of rows in the inventory table for this location.
+     */
+    long countByStorageLocationId(Integer storageLocationId);
+    
+    /**
      * Retrieves a distinct list of Card Definition IDs for all items currently in stock.
      * <p>
      * This is used by the Price Update Service to ensure we only query the API

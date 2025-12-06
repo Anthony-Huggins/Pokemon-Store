@@ -54,11 +54,6 @@ public class InventoryItem {
     @Column(nullable = false)
     private VariantType variant;
 
-    /**
-     * The number of cards in this stack.
-     */
-    @Column(nullable = false)
-    private Integer quantity;
 
     // --- Pricing Fields ---
 
@@ -166,18 +161,6 @@ public class InventoryItem {
     public void setVariant(VariantType variant) { this.variant = variant; }
 
     /**
-     * Gets the quantity.
-     * @return The quantity integer.
-     */
-    public Integer getQuantity() { return quantity; }
-
-    /**
-     * Sets the quantity.
-     * @param quantity The quantity integer.
-     */
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
-
-    /**
      * Gets the manual price.
      * @return The price or null.
      */
@@ -258,7 +241,6 @@ public class InventoryItem {
                 ", card=" + (cardDefinition != null ? cardDefinition.getName() : "null") +
                 ", condition=" + condition +
                 ", variant=" + variant +
-                ", qty=" + quantity +
                 '}';
     }
 }
