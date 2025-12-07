@@ -124,7 +124,7 @@ export default function StorageLocationManager({
         {/* Add Button (Hidden if form is open) */}
         {!isAdding && !editingId && (
           <Button 
-            fullWidth variant="outlined" startIcon={<AddCircleIcon />} sx={{ mb: 2, borderStyle: 'dashed' }}
+            fullWidth variant="contained" startIcon={<AddCircleIcon />} sx={{ mb: 2, borderStyle: 'dashed' }}
             onClick={startAdd}
           >
             Add New Binder / Box
@@ -159,11 +159,12 @@ export default function StorageLocationManager({
                 <ListItem sx={{ borderBottom: '1px solid #334155', borderRadius: 1 }}>
                   <ListItemText
                     primary={
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, pr: 8 }}>
                         <Typography fontWeight="bold">{loc.name}</Typography>
                         <Typography variant="caption">{loc.type}</Typography>
                       </Box>
                     }
+                    secondaryTypographyProps={{ component: 'div' }}
                     secondary={
                       <Box sx={{ mt: 1 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', mb: 0.5 }}>
