@@ -43,7 +43,7 @@ public interface CardDefinitionRepository extends JpaRepository<CardDefinition, 
             "LEFT JOIN c.types t " + // Join types table
             "JOIN c.set s " +        // Join set table
             "WHERE c.imageUrl IS NOT NULL " + // Only show cards with images
-            "AND (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
+            "AND (:name IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
             "AND (:cardType IS NULL OR t = :cardType) " +
             "AND (:rarity IS NULL OR c.rarity = :rarity) " +
             "AND (:setId IS NULL OR s.id = :setId) " + 

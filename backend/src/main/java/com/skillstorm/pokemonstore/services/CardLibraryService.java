@@ -1,7 +1,12 @@
 package com.skillstorm.pokemonstore.services;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
+import com.skillstorm.pokemonstore.models.CardSet;
 import com.skillstorm.pokemonstore.repositories.CardDefinitionRepository;
+import com.skillstorm.pokemonstore.repositories.CardSetRepository;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +24,11 @@ import org.springframework.stereotype.Service;
 public class CardLibraryService {
 
     private final CardDefinitionRepository cardRepo;
+    private final CardSetRepository setRepo;
 
-    public CardLibraryService(CardDefinitionRepository cardRepo) {
+    public CardLibraryService(CardDefinitionRepository cardRepo, CardSetRepository setRepo) {
         this.cardRepo = cardRepo;
+        this.setRepo = setRepo;
     }
 
     /**
@@ -61,5 +68,17 @@ public class CardLibraryService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
         
         return cardRepo.searchCards(name, cardType, rarity, setId, hp, pageable);
+    }
+
+    /**
+     * Retrieves a list of all available card sets, sorted alphabetically by name.
+     * <p>
+     * Used to populate dropdown filters in the frontend.
+     * </p>
+     *
+     * @return A List of all {@link CardSet} entities.
+     */
+    public List<CardSet> getAllSets() {
+        return setRepo.findAll(Sort.by("name"));
     }
 }

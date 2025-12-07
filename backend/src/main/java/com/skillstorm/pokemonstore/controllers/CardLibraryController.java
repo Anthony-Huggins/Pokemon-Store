@@ -1,7 +1,11 @@
 package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
+import com.skillstorm.pokemonstore.models.CardSet;
 import com.skillstorm.pokemonstore.services.CardLibraryService;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +55,19 @@ public class CardLibraryController {
         return ResponseEntity.ok(libraryService.getAllCards(page, size));
     }
 
+    /**
+     * GET /api/v1/library/search
+     * Searches for cards based on various criteria.
+     *
+     * @param name      Partial or full name of the card.
+     * @param cardType  Type of the card (e.g., "Fire", "Water").
+     * @param rarity    Rarity level (e.g., "Common", "Rare").
+     * @param setId     ID of the expansion set.
+     * @param hp        Hit points of the card.
+     * @param page      Zero-based page index (default 0).
+     * @param size      The number of records per page (default 24).
+     * @return A {@link Page} of {@link CardDefinition} entities matching the criteria.
+     */
     @GetMapping("/search")
     public ResponseEntity<Page<CardDefinition>> searchCards(
             @RequestParam(required = false) String name,
@@ -62,5 +79,19 @@ public class CardLibraryController {
             @RequestParam(defaultValue = "24") int size
     ) {
         return ResponseEntity.ok(libraryService.searchCards(name, cardType, rarity, setId, hp, page, size));
+    }
+
+    /**
+     * GET /api/v1/library/sets
+     * Retrieves all available expansion sets.
+     * <p>
+     * Used for the "Set" dropdown filter on the library page.
+     * </p>
+     *
+     * @return A list of {@link CardSet} objects.
+     */
+    @GetMapping("/sets")
+    public ResponseEntity<List<CardSet>> getAllSets() {
+        return ResponseEntity.ok(libraryService.getAllSets());
     }
 }
