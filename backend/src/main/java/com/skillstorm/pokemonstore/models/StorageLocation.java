@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.Objects;
 
+import org.hibernate.annotations.Formula;
+
 /**
  * Represents a specific storage container inside a warehouse.
  * <p>
@@ -56,6 +58,11 @@ public class StorageLocation {
      */
     @Column(name = "max_capacity", nullable = false)
     private Integer maxCapacity;
+
+    // This runs a sub-query to count items for THIS specific location ID
+    @Formula("(SELECT COUNT(*) FROM inventory_items i WHERE i.storage_location_id = id)")
+    private int currentCount;
+
 
     // --- Constructors ---
 
@@ -140,6 +147,18 @@ public class StorageLocation {
      */
     public void setMaxCapacity(Integer maxCapacity) { this.maxCapacity = maxCapacity; }
 
+    /**
+     * Gets the current count of items in this location.
+     * @return The current item count.
+     */
+    public int getCurrentCount() { return currentCount; }
+    
+    /**
+     * Sets the current count of items in this location.
+     * @param currentCount The current item count.
+     */
+    public void setCurrentCount(int currentCount) { this.currentCount = currentCount; }
+    
     // --- Overrides ---
 
     /**

@@ -132,7 +132,7 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
         </Grid>
 
         {/* 2. Storage Location (Child Dropdown) */}
-        <Grid size={6}>
+        <Grid size={12}>
           <TextField
             select fullWidth label="Binder / Shelf" name="storageLocationId"
             value={formData.storageLocationId} onChange={handleChange} size="small"
@@ -150,11 +150,11 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
 
             {availableLocations.map(loc => (
               <MenuItem key={loc.id} value={loc.id}>
-                {loc.name} (Cap: {loc.maxCapacity})
+                {loc.name} ({loc.currentCount || 0}/{loc.maxCapacity})
               </MenuItem>
             ))}
           </TextField>
-        </Grid>
+        </Grid>  
 
         {/* Pricing Strategy Section */}
         <Grid size={12}>

@@ -55,7 +55,7 @@ public class InventoryItemService {
         newItem.setCardDefinition(card);
 
         // 3. Check Capacity
-        long currentCount = inventoryRepo.countByStorageLocationId(location.getId());
+        int currentCount = location.getCurrentCount();
 
         // Logic: If current count (e.g., 50) is already equal to or greater than max (50), we can't add 1 more.
         if (currentCount >= location.getMaxCapacity()) {
