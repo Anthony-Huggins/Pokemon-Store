@@ -31,6 +31,16 @@ public class InventoryItemController {
     }
 
     /**
+     * Retrieves all inventory items across all locations.
+     *
+     * @return List of all inventory items.
+     */
+    @GetMapping
+    public ResponseEntity<List<InventoryItem>> getAllItems() {
+        return ResponseEntity.ok(inventoryItemService.getAllItems());
+    }
+
+    /**
      * Retrieves all cards stored in a specific container (e.g., "Binder A").
      *
      * @param id The ID of the storage location.

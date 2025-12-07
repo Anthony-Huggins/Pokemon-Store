@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import com.fasterxml.jackson.datatype.hibernate5.jakarta.Hibernate5JakartaModule;
 import com.skillstorm.pokemonstore.repositories.CardSetRepository;
 import com.skillstorm.pokemonstore.services.TcgDexSyncService;
 
@@ -27,6 +28,19 @@ public class PokemonstoreApplication {
     public static void main(String[] args) {
         SpringApplication.run(PokemonstoreApplication.class, args);
     }
+
+    /**
+     * Configures the Hibernate5JakartaModule for Jackson to handle lazy loading and proxies.
+     * This bean ensures that Hibernate-specific types are properly serialized/deserialized
+     * when working with JSON in REST APIs.
+     *
+     * @return An instance of Hibernate5JakartaModule.
+     */
+    @Bean
+    public Hibernate5JakartaModule hibernate5Module() {
+        return new Hibernate5JakartaModule();
+    }
+
 
     /**
      * Defines a startup task that checks the database state and performs initial data seeding.
@@ -55,4 +69,6 @@ public class PokemonstoreApplication {
             }
         };
     }
+
+    
 }

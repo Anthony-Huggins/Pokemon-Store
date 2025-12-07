@@ -125,4 +125,12 @@ public class InventoryItemService {
     public List<InventoryItem> getItemsInLocation(Integer locationId) {
         return inventoryRepo.findByStorageLocationId(locationId);
     }
+
+    /**
+     * Retrieves all inventory items across all locations.
+     * @return List of all inventory items.
+     */
+    public List<InventoryItem> getAllItems() {
+        return inventoryRepo.findAll();
+    }
 }
