@@ -81,14 +81,22 @@ public class InventoryItemService {
         // 2. Handle Storage Location Change (Moving the card)
         if (item.getStorageLocation() != null) {
             Integer newLocId = item.getStorageLocation().getId();
-            StorageLocation newLoc = storageRepo.findById(newLocId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Location ID " + newLocId + " not found."));
-            
-            // Hydrate the new location so the UI sees the new Binder Name immediately
-            item.setStorageLocation(newLoc);
-        } else {
-            // Keep the old location if null was sent
-            item.setStorageLocation(existingItem.getStorageLocation());
+            Integer currentLocId = existingItem.getStorageLocation().getId();
+
+            // ONLY perform checks and updates if we are actually moving to a NEW location
+            if (!newLocId.equals(currentLocId)) {
+                StorageLocation newLoc = storageRepo.findById(newLocId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Location ID " + newLocId + " not found."));
+
+                // Capacity Check: Only needed because we are adding a NEW item to this specific box
+                if (newLoc.getCurrentCount() >= newLoc.getMaxCapacity()) {
+                    throw new IllegalStateException("Capacity Exceeded! Container '" + newLoc.getName() + 
+                                                    "' is full (" + newLoc.getCurrentCount() + "/" + newLoc.getMaxCapacity() + 
+                                                    "). Cannot move card here.");
+                }
+                
+                existingItem.setStorageLocation(newLoc);
+            }
         }
 
         // 3. Handle details that shouldn't change (like the Card Definition)
