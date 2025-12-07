@@ -7,8 +7,28 @@ import {
   Typography 
 } from '@mui/material';
 
+/**
+ * A universal card component that displays either an Inventory Item or a generic Card Definition.
+ * <p>
+ * <strong>Modes:</strong>
+ * <ul>
+ * <li><strong>Inventory Mode:</strong> Pass `item`. Displays Condition and Location info.</li>
+ * <li><strong>Library Mode:</strong> Pass `card`. Displays only the image and set info.</li>
+ * </ul>
+ * </p>
+ *
+ * @component
+ * @param {Object} props
+ * @param {Object} [props.item] - The inventory item (contains .cardDefinition, .condition, etc.).
+ * @param {Object} [props.card] - The raw card definition (if item is not present).
+ * @param {Function} props.onClick - Handler called with the object passed in (item or card).
+ */
 export default function InventoryCard({ item, onClick }) {
-  const cardDef = item.cardDefinition;
+  // Determine which object to display
+  // If 'item' exists, we are in Inventory Mode. If not, use 'card' (Library Mode).
+  const cardDef = item ? item.cardDefinition : card;
+
+  if (!cardDef) return null;
 
   return (
     <Card 
@@ -25,7 +45,7 @@ export default function InventoryCard({ item, onClick }) {
         }
       }}
     >
-      <CardActionArea onClick={() => onClick(item)} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+      <CardActionArea onClick={() => onClick(item || card)} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
         
         {/* Card Image */}
         <Box sx={{ position: 'relative', pt: '140%' /* Aspect Ratio for Pokemon Cards */ }}>
@@ -45,28 +65,40 @@ export default function InventoryCard({ item, onClick }) {
           />
           
           {/* Condition Badge (Top Right) */}
-          <Chip 
-            label={item.condition} 
-            size="small" 
-            color={item.condition === 'NM' ? 'success' : 'warning'}
-            sx={{ 
-              position: 'absolute', 
-              top: 8, 
-              right: 8, 
-              fontWeight: 'bold',
-              border: '1px solid rgba(0,0,0,0.5)'
-            }} 
-          />
+          {item && (
+            <Chip 
+              label={item.condition} 
+              size="small" 
+              color={item.condition === 'NM' ? 'success' : 'warning'}
+              sx={{ 
+                position: 'absolute', 
+                top: 8, 
+                right: 8, 
+                fontWeight: 'bold',
+                border: '1px solid rgba(0,0,0,0.5)'
+              }} 
+            />
+          )}
         </Box>
 
-        {/* Minimal Footer Info */}
+        {/* Footer Info */}
         <Box sx={{ p: 1, bgcolor: 'background.paper', borderTop: '1px solid #334155' }}>
           <Typography variant="subtitle2" noWrap align="center" sx={{ fontWeight: 600 }}>
             {cardDef.name}
           </Typography>
-          <Typography variant="caption" display="block" align="center" color="text.secondary">
-             {cardDef.set?.name} • {item.storageLocation?.name}
-          </Typography>
+          
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
+             {/* Set Info (Always Show) */}
+             <Chip label={cardDef.set?.name} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
+             <Chip label={`#${cardDef.localId}`} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
+          </Box>
+
+          {/* Location Info (Inventory Mode Only) */}
+          {item && item.storageLocation && (
+            <Typography variant="caption" display="block" align="center" color="text.secondary" sx={{ mt: 0.5 }}>
+               in {item.storageLocation.name}
+            </Typography>
+          )}
         </Box>
 
       </CardActionArea>
