@@ -37,7 +37,33 @@ export default function Inventory() {
   });
 
   /**
-   * Fetches all inventory items and the warehouse hierarchy on mount.
+   * Fetches the warehouse hierarchy on mount.
+   */
+  const fetchWarehouses = async () => {
+    try {
+      const response = await api.get('/warehouses');
+      setWarehouses(response.data);
+    } catch (error) {
+      console.error("Failed to update warehouse counts:", error);
+    }
+  };
+
+  /**
+   * Fetches the inventory items on mount.
+   */
+  const fetchInventory = async () => {
+    // Note: We don't set global loading here to avoid flashing the whole screen 
+    // when just refreshing data in the background
+    try {
+      const response = await api.get('/inventory');
+      setItems(response.data);
+    } catch (error) {
+      console.error("Failed to fetch inventory:", error);
+    }
+  };
+
+  /**  
+   * Effect to load inventory data and warehouse hierarchy on component mount.
    */
   useEffect(() => {
     const loadData = async () => {
@@ -45,12 +71,9 @@ export default function Inventory() {
       try {
         // Parallel fetch for speed
         const [itemsRes, warehousesRes] = await Promise.all([
-          api.get('/inventory'),
-          api.get('/warehouses')
+          fetchInventory(),
+          fetchWarehouses()
         ]);
-        
-        setItems(itemsRes.data);
-        setWarehouses(warehousesRes.data);
       } catch (error) {
         console.error("Failed to load inventory data:", error);
         showNotification("Failed to load data. Check backend.", "error");
@@ -83,6 +106,8 @@ export default function Inventory() {
       setItems(prev => prev.map(i => i.id === updatedItem.id ? response.data : i));
       setSelectedItem(response.data); // Update modal view
       
+      fetchWarehouses();
+
       showNotification("Item updated successfully!", "success");
       setModalOpen(false);
     } catch (error) {
@@ -103,6 +128,8 @@ export default function Inventory() {
       
       // Remove from local list
       setItems(prev => prev.filter(i => i.id !== itemId));
+      
+      fetchWarehouses();
       
       showNotification("Item deleted.", "success");
       setModalOpen(false);
