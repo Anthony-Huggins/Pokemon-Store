@@ -1,56 +1,120 @@
 import { useState, useEffect } from 'react';
 import { 
   Box, Grid, Paper, TextField, MenuItem, Button, 
-  Typography, InputAdornment, LinearProgress, Stack
+  Typography, InputAdornment, LinearProgress, Stack, Snackbar, Alert
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import api from '../api/axiosConfig';
 
-import Card from '../components/Card';
+// Import Components
+import InventoryCard from '../components/InventoryCard';
 import CardDetailModal from '../components/CardDetailModal';
 
+/**
+ * Main Inventory Page.
+ * Displays a grid of all cards owned by the store.
+ * Handles fetching data, filtering, and opening the detail modal.
+ *
+ * @component
+ */
 export default function Inventory() {
+  // --- Data State ---
   const [items, setItems] = useState([]);
+  const [warehouses, setWarehouses] = useState([]); // Needed for the modal dropdowns
   const [loading, setLoading] = useState(false);
   
-  // Modal State
-  const [selectedItem, setSelectedItem] = useState(null);
+  // --- UI State ---
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
-  // Filter State (Visual only for now, until backend search is ready)
+  // --- Filter State (Visual placeholders for now) ---
   const [filters, setFilters] = useState({
     name: '',
     cardType: '',
     rarity: '',
-    locationType: '',
   });
 
-  // Fetch ALL items on load
-  const fetchInventory = async () => {
-    setLoading(true);
-    try {
-      // Calling our new "Get All" endpoint
-      const response = await api.get('/inventory');
-      setItems(response.data);
-    } catch (error) {
-      console.error("Failed to fetch inventory:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  /**
+   * Fetches all inventory items and the warehouse hierarchy on mount.
+   */
   useEffect(() => {
-    fetchInventory();
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Parallel fetch for speed
+        const [itemsRes, warehousesRes] = await Promise.all([
+          api.get('/inventory'),
+          api.get('/warehouses')
+        ]);
+        
+        setItems(itemsRes.data);
+        setWarehouses(warehousesRes.data);
+      } catch (error) {
+        console.error("Failed to load inventory data:", error);
+        showNotification("Failed to load data. Check backend.", "error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
+  /**
+   * Opens the detail modal for a specific card.
+   * @param {Object} item - The inventory item clicked.
+   */
   const handleCardClick = (item) => {
     setSelectedItem(item);
     setModalOpen(true);
   };
 
-  const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+  /**
+   * Handles saving changes from the Modal (PUT request).
+   * @param {Object} updatedItem - The modified item object from the form.
+   */
+  const handleSaveItem = async (updatedItem) => {
+    try {
+      const response = await api.put('/inventory', updatedItem);
+      
+      // Update local state immediately (Optimistic UI update)
+      setItems(prev => prev.map(i => i.id === updatedItem.id ? response.data : i));
+      setSelectedItem(response.data); // Update modal view
+      
+      showNotification("Item updated successfully!", "success");
+      setModalOpen(false);
+    } catch (error) {
+      console.error("Update failed:", error);
+      showNotification("Failed to update item.", "error");
+    }
+  };
+
+  /**
+   * Handles deleting an item from the Modal (DELETE request).
+   * @param {number} itemId - The ID of the item to delete.
+   */
+  const handleDeleteItem = async (itemId) => {
+    if (!confirm("Are you sure you want to delete this card?")) return;
+
+    try {
+      await api.delete(`/inventory/${itemId}`);
+      
+      // Remove from local list
+      setItems(prev => prev.filter(i => i.id !== itemId));
+      
+      showNotification("Item deleted.", "success");
+      setModalOpen(false);
+    } catch (error) {
+      console.error("Delete failed:", error);
+      showNotification("Failed to delete item.", "error");
+    }
+  };
+
+  // Helper for snackbar
+  const showNotification = (message, type) => {
+    setNotification({ open: true, message, type });
   };
 
   return (
@@ -65,35 +129,22 @@ export default function Inventory() {
             <Typography variant="h6" fontWeight="bold">Inventory</Typography>
           </Box>
 
-          {/* Search Name */}
           <TextField 
             label="Search Card Name" 
-            name="name" 
             value={filters.name} 
-            onChange={handleFilterChange} 
+            onChange={(e) => setFilters({...filters, name: e.target.value})} 
             size="small"
-            sx={{ flexGrow: 1 }} // Takes up available space
-            InputProps={{
-              startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment>,
-            }}
+            sx={{ flexGrow: 1 }} 
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
           />
 
-          {/* Filters (Visual Placeholders for now) */}
-          <TextField select label="Type" name="cardType" value={filters.cardType} onChange={handleFilterChange} size="small" sx={{ minWidth: 120 }}>
+          <TextField select label="Type" value={filters.cardType} onChange={(e) => setFilters({...filters, cardType: e.target.value})} size="small" sx={{ minWidth: 120 }}>
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Fire">Fire</MenuItem>
             <MenuItem value="Water">Water</MenuItem>
           </TextField>
-
-          <TextField select label="Rarity" name="rarity" value={filters.rarity} onChange={handleFilterChange} size="small" sx={{ minWidth: 120 }}>
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="Rare Holo">Holo</MenuItem>
-            <MenuItem value="Secret Rare">Secret</MenuItem>
-          </TextField>
           
-          <Button variant="contained" onClick={fetchInventory}>
-             Refresh
-          </Button>
+          <Button variant="contained" onClick={() => window.location.reload()}>Refresh</Button>
         </Stack>
       </Paper>
 
@@ -102,10 +153,10 @@ export default function Inventory() {
       
       <Grid container spacing={2}>
         {items.map((item) => (
-        
-            <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-                <Card item={item} onClick={handleCardClick} />
-            </Grid>
+          // Grid v6 Syntax: using 'size' object
+          <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+            <InventoryCard item={item} onClick={handleCardClick} />
+          </Grid>
         ))}
       </Grid>
       
@@ -115,12 +166,22 @@ export default function Inventory() {
         </Typography>
       )}
 
-      {/* Details Modal */}
+      {/* --- MODAL --- */}
       <CardDetailModal 
         open={modalOpen} 
         onClose={() => setModalOpen(false)} 
-        item={selectedItem} 
+        item={selectedItem}
+        warehouses={warehouses} // Passing the hierarchy for the dropdowns
+        onSave={handleSaveItem}
+        onDelete={handleDeleteItem}
       />
+
+      {/* --- NOTIFICATIONS --- */}
+      <Snackbar open={notification.open} autoHideDuration={4000} onClose={() => setNotification({...notification, open: false})}>
+        <Alert severity={notification.type} variant="filled">
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

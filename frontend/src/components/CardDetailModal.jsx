@@ -1,94 +1,98 @@
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogTitle, 
-  IconButton, 
-  Grid, 
-  Box, 
-  Typography, 
-  Chip, 
-  Divider,
-  Button
+  Dialog, DialogContent, IconButton, Grid, Box, 
+  Typography, Chip 
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 
-export default function CardDetailModal({ open, onClose, item }) {
+// Import sub-components
+import InventoryItemForm from './InventoryItemForm';
+import CardSpecs from './CardSpecs';
+
+/**
+ * A modal dialog that displays detailed information about a selected Inventory Item.
+ * It combines the visual card image with editable inventory details and static card specifications.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {boolean} props.open - Whether the modal is currently visible.
+ * @param {Function} props.onClose - Handler to close the modal.
+ * @param {Object} props.item - The inventory item object currently selected.
+ * @param {Function} props.onSave - Callback passed down to the form for saving changes.
+ * @param {Function} props.onDelete - Callback passed down to the form for deleting the item.
+ * @param {Array<Object>} [props.warehouses=[]] - Hierarchical list of warehouses (and their nested locations) for the move dropdown.
+ * @returns {JSX.Element|null} The rendered modal.
+ */
+export default function CardDetailModal({ open, onClose, item, onSave, onDelete, warehouses = [] }) {
   if (!item) return null;
 
-  const { cardDefinition: card, storageLocation: loc } = item;
+  const { cardDefinition: card } = item;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}
+    >
+      {/* Floating Close Button */}
+      <IconButton 
+        onClick={onClose} 
+        sx={{ 
+          position: 'absolute', 
+          right: 8, 
+          top: 8, 
+          zIndex: 1, 
+          bgcolor: 'rgba(0,0,0,0.3)', 
+          color: 'white',
+          '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' } 
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
 
-      <DialogContent dividers>
+      <DialogContent sx={{ p: 0, minHeight: '500px', display: 'flex' }}>
+        <Grid container sx={{ height: '100%' }}>
           
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, md: 5 }}>
+          {/* LEFT: Static Image Area */}
+          <Grid size={{ xs: 12, md: 5 }} sx={{ bgcolor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
             <Box 
               component="img"
               src={card.imageUrl} 
               alt={card.name}
               sx={{ 
                 width: '100%', 
+                maxWidth: '350px', 
                 borderRadius: 2, 
-                boxShadow: 3,
-                bgcolor: '#1e293b' // Dark background in case image has transparency
+                boxShadow: '0px 10px 30px rgba(0,0,0,0.5)' 
               }} 
             />
           </Grid>
 
-
-          <Grid size={{ xs: 12, md: 7 }}>
+          {/* RIGHT: Dynamic Details Area */}
+          <Grid size={{ xs: 12, md: 7 }} sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
             
-            {/* Inventory Details Section */}
-            <Typography variant="overline" color="text.secondary">Inventory Details</Typography>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid size={6}>
-                <Typography variant="caption" display="block">Condition</Typography>
-                <Chip label={item.condition} color={item.condition === 'NM' ? 'success' : 'default'} />
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="caption" display="block">Price</Typography>
-                <Typography variant="h6" color="success.main">
-                  {item.setPrice ? `$${item.setPrice}` : 'Market Price'}
-                </Typography>
-              </Grid>
-              <Grid size={12}>
-                <Typography variant="caption" display="block">Location</Typography>
-                <Typography variant="body1">
-                   {loc?.name} <Typography component="span" variant="body2" color="text.secondary">in {loc?.warehouse?.name}</Typography>
-                </Typography>
-              </Grid>
-            </Grid>
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Card Stats Section */}
-            <Typography variant="overline" color="text.secondary">Card Specs</Typography>
-            <Grid container spacing={2}>
-              <Grid size={6}>
-                <Typography variant="body2"><strong>Set:</strong> {card.set?.name}</Typography>
-                <Typography variant="body2"><strong>Number:</strong> {card.localId}</Typography>
-              </Grid>
-              <Grid size={6}>
-                <Typography variant="body2"><strong>Rarity:</strong> {card.rarity}</Typography>
-                <Typography variant="body2"><strong>HP:</strong> {card.hp || 'N/A'}</Typography>
-              </Grid>
-              <Grid size={12}>
-                 <Typography variant="body2" component="span" sx={{ mr: 1 }}><strong>Types:</strong></Typography>
-                 {card.types?.map(t => (
-                   <Chip key={t} label={t} size="small" sx={{ mr: 0.5 }} />
-                 ))}
-              </Grid>
-            </Grid>
-
-            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-                <Button variant="outlined" startIcon={<EditIcon />}>Edit Item</Button>
-                <Button variant="outlined" color="error" startIcon={<DeleteIcon />}>Delete</Button>
+            {/* Header (Shared Info) */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>{card.name}</Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Chip label={card.set?.name} size="small" variant="outlined" />
+                <Chip label={card.rarity} size="small" variant="outlined" />
+                <Chip label={`#${card.localId}`} size="small" variant="outlined" />
+              </Box>
             </Box>
+
+            {/* 1. Inventory Form (Editable Fields) */}
+            {/* Pass the warehouses hierarchy down so the dropdown works */}
+            <InventoryItemForm 
+              item={item} 
+              warehouses={warehouses} 
+              onSave={onSave} 
+              onDelete={onDelete} 
+            />
+
+            {/* 2. Static Specs (Read-Only Data) */}
+            <CardSpecs cardDefinition={card} />
 
           </Grid>
         </Grid>

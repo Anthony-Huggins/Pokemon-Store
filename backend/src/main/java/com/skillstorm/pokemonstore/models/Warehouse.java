@@ -40,7 +40,7 @@ public class Warehouse {
      * a Warehouse and immediately see all binders/cases inside it without a second API call.
      * </p>
      */
-    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "warehouse", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<StorageLocation> storageLocations;
 
     // --- Constructors ---

@@ -2,7 +2,7 @@ package com.skillstorm.pokemonstore.models;
 
 import com.skillstorm.pokemonstore.models.enums.LocationType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 import java.util.Objects;
@@ -34,7 +34,7 @@ public class StorageLocation {
      */
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "warehouse_id", nullable = false)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonIgnoreProperties("storageLocations")
     private Warehouse warehouse;
 
     /**
