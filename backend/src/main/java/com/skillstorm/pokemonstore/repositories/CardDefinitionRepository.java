@@ -1,6 +1,8 @@
 package com.skillstorm.pokemonstore.repositories;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,4 +19,13 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface CardDefinitionRepository extends JpaRepository<CardDefinition, String> {
+
+    /**
+     * Finds all cards that actually have an image URL.
+     * This filters out placeholder entries or cards with missing art.
+     *
+     * @param pageable Pagination info.
+     * @return A Page of cards with images.
+     */
+    Page<CardDefinition> findByImageUrlIsNotNull(Pageable pageable);
 }

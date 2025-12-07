@@ -49,15 +49,8 @@ public class CardLibraryController {
     @GetMapping
     public ResponseEntity<Page<CardDefinition>> getAllCards(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size
+            @RequestParam(defaultValue = "18") int size
     ) {
-        // Create a custom Sort to prioritize cards with images
-        Sort sort = Sort.by(Sort.Order.asc("imageUrl").nullsLast())
-                        .and(Sort.by("set.id"))
-                        .and(Sort.by("localId"));
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        return ResponseEntity.ok(libraryService.getAllCards(pageable));
+        return ResponseEntity.ok(libraryService.getAllCards(page, size));
     }
 }
