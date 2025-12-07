@@ -60,6 +60,19 @@ export default function Warehouses() {
     }
   };
 
+  const handleDeleteWarehouse = async (id) => {
+    if (!confirm("Are you sure? This will delete the Store AND all binders/cards inside it!")) return;
+    
+    try {
+      await api.delete(`/warehouses/${id}`);
+      showNotification("Warehouse deleted successfully", "success");
+      setWarehouseModalOpen(false); // Close the modal
+      fetchWarehouses(); // Refresh the grid
+    } catch (error) {
+      showNotification("Failed to delete warehouse", "error");
+    }
+  };
+
   // --- Handlers for Storage Location CRUD (Inside the Manager Modal) ---
 
   const handleAddLocation = async (locationData) => {
@@ -136,6 +149,7 @@ export default function Warehouses() {
         onClose={() => setWarehouseModalOpen(false)}
         warehouse={selectedWarehouse}
         onSubmit={selectedWarehouse ? handleUpdateWarehouse : handleCreateWarehouse}
+        onDelete={handleDeleteWarehouse}
       />
 
       {/* 2. Modal for Managing Binders inside the building */}

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { 
   Dialog, DialogTitle, DialogContent, DialogActions, 
-  TextField, Button 
+  TextField, Button, Box
 } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 /**
  * Modal to Create or Edit a Warehouse entity.
@@ -14,7 +15,7 @@ import {
  * @param {Function} props.onSubmit - Save handler.
  * @param {Object} [props.warehouse] - The warehouse to edit (null for create).
  */
-export default function WarehouseFormDialog({ open, onClose, onSubmit, warehouse }) {
+export default function WarehouseFormDialog({ open, onClose, onSubmit, onDelete, warehouse }) {
   const [formData, setFormData] = useState({ name: '', location: '' });
 
   useEffect(() => {
@@ -50,11 +51,27 @@ export default function WarehouseFormDialog({ open, onClose, onSubmit, warehouse
           onChange={(e) => setFormData({ ...formData, location: e.target.value })}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={!formData.name}>
-          {warehouse ? 'Save Changes' : 'Create'}
-        </Button>
+      <DialogActions sx={{ justifyContent: 'space-between', p: 3 }}>
+        {/* LEFT SIDE: Delete Button (Only in Edit Mode) */}
+        {warehouse ? (
+          <Button 
+            onClick={() => onDelete(warehouse.id)} 
+            color="error" 
+            startIcon={<DeleteIcon />}
+          >
+            Delete Store
+          </Button>
+        ) : (
+          <Box /> // Empty spacer to keep Save button on the right
+        )}
+
+        {/* RIGHT SIDE: Cancel & Save */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={handleSubmit} variant="contained" disabled={!formData.name}>
+            {warehouse ? 'Save Changes' : 'Create'}
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
