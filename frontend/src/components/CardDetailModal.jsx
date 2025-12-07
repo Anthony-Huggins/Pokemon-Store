@@ -82,14 +82,14 @@ export default function CardDetailModal({ open, onClose, item, card, warehouses 
           <Grid size={{ xs: 12, md: 7 }} sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
             
             {/* Header (Shared Info) */}
-            <Box sx={{ mb: 3 }}>
+            {/* <Box sx={{ mb: 3 }}>
               <Typography variant="h4" fontWeight="bold" gutterBottom>{cardDef.name}</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 <Chip label={cardDef.set?.name} size="small" variant="outlined" />
                 <Chip label={cardDef.rarity} size="small" variant="outlined" />
                 <Chip label={`#${cardDef.localId}`} size="small" variant="outlined" />
               </Box>
-            </Box>
+            </Box> */}
 
             {/* 1. Inventory Form (Editable Fields) */}
             {/* Pass the warehouses hierarchy down so the dropdown works */}
