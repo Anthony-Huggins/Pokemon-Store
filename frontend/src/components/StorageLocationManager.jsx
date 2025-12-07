@@ -14,6 +14,37 @@ import SaveIcon from '@mui/icons-material/Save';
 // Enum for Java LocationType
 const locationTypes = ['BINDER', 'DISPLAY_CASE', 'BULK_BOX', 'BACK_ROOM'];
 
+const InlineForm = ({ isAdding, formData, setFormData, onCancel, onSave }) => (
+  <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'action.hover' }}>
+    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+      {isAdding ? 'New Storage Location' : 'Edit Storage Location'}
+    </Typography>
+    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+      <TextField 
+        label="Name" size="small" fullWidth 
+        value={formData.name} 
+        onChange={(e) => setFormData(prev => ({...prev, name: e.target.value}))} 
+      />
+      <TextField 
+        select label="Type" size="small" sx={{ width: 150 }}
+        value={formData.type} 
+        onChange={(e) => setFormData(prev => ({...prev, type: e.target.value}))}
+      >
+        {locationTypes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+      </TextField>
+      <TextField 
+        label="Capacity" type="number" size="small" sx={{ width: 100 }}
+        value={formData.maxCapacity} 
+        onChange={(e) => setFormData(prev => ({...prev, maxCapacity: e.target.value}))} 
+      />
+    </Box>
+    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+      <Button size="small" onClick={onCancel}>Cancel</Button>
+      <Button size="small" variant="contained" startIcon={<SaveIcon />} onClick={onSave}>Save</Button>
+    </Box>
+  </Paper>
+);
+
 /**
  * A complex modal to manage the Storage Locations (Binders) within a specific Warehouse.
  * Allows viewing capacity, creating new binders, and editing/deleting existing ones.
@@ -76,34 +107,7 @@ export default function StorageLocationManager({
     return 'success';
   };
 
-  // --- Inline Form Component (Used for both Add and Edit row) ---
-  const InlineForm = () => (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'action.hover' }}>
-      <Typography variant="subtitle2" sx={{ mb: 1 }}>
-        {isAdding ? 'New Storage Location' : 'Edit Storage Location'}
-      </Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField 
-          label="Name" size="small" fullWidth 
-          value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} 
-        />
-        <TextField 
-          select label="Type" size="small" sx={{ width: 150 }}
-          value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
-        >
-          {locationTypes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
-        </TextField>
-        <TextField 
-          label="Capacity" type="number" size="small" sx={{ width: 100 }}
-          value={formData.maxCapacity} onChange={(e) => setFormData({...formData, maxCapacity: e.target.value})} 
-        />
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        <Button size="small" onClick={handleCancel}>Cancel</Button>
-        <Button size="small" variant="contained" startIcon={<SaveIcon />} onClick={handleSave}>Save</Button>
-      </Box>
-    </Paper>
-  );
+  
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -129,7 +133,13 @@ export default function StorageLocationManager({
 
         {/* Add Form */}
         <Collapse in={isAdding}>
-          <InlineForm />
+          <InlineForm 
+            isAdding={true}
+            formData={formData}
+            setFormData={setFormData}
+            onCancel={handleCancel}
+            onSave={handleSave}
+          />
         </Collapse>
 
         {/* List of Existing Locations */}
@@ -138,7 +148,13 @@ export default function StorageLocationManager({
             <Box key={loc.id}>
               {/* If editing this specific row, show form instead of list item */}
               {editingId === loc.id ? (
-                <InlineForm />
+                <InlineForm 
+                  isAdding={true}
+                  formData={formData}
+                  setFormData={setFormData}
+                  onCancel={handleCancel}
+                  onSave={handleSave}
+                />
               ) : (
                 <ListItem sx={{ borderBottom: '1px solid #334155', borderRadius: 1 }}>
                   <ListItemText

@@ -112,7 +112,7 @@ export default function Warehouses() {
           startIcon={<AddBusinessIcon />}
           onClick={() => { setSelectedWarehouse(null); setWarehouseModalOpen(true); }}
         >
-          Add Warehouse
+          Add Store
         </Button>
       </Paper>
 
