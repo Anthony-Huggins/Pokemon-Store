@@ -81,25 +81,7 @@ export default function InventoryCard({ item, onClick }) {
           )}
         </Box>
 
-        {/* Footer Info */}
-        <Box sx={{ p: 1, bgcolor: 'background.paper', borderTop: '1px solid #334155' }}>
-          <Typography variant="subtitle2" noWrap align="center" sx={{ fontWeight: 600 }}>
-            {cardDef.name}
-          </Typography>
-          
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, mt: 0.5 }}>
-             {/* Set Info (Always Show) */}
-             <Chip label={cardDef.set?.name} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
-             <Chip label={`#${cardDef.localId}`} size="small" sx={{ height: 20, fontSize: '0.65rem' }} />
-          </Box>
-
-          {/* Location Info (Inventory Mode Only) */}
-          {item && item.storageLocation && (
-            <Typography variant="caption" display="block" align="center" color="text.secondary" sx={{ mt: 0.5 }}>
-               in {item.storageLocation.name}
-            </Typography>
-          )}
-        </Box>
+        
 
       </CardActionArea>
     </Card>

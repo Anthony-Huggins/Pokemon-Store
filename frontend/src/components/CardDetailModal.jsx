@@ -9,23 +9,32 @@ import InventoryItemForm from './InventoryItemForm';
 import CardSpecs from './CardSpecs';
 
 /**
- * A modal dialog that displays detailed information about a selected Inventory Item.
- * It combines the visual card image with editable inventory details and static card specifications.
+ * A universal modal dialog that displays detailed information about a card.
+ * <p>
+ * <strong>Modes:</strong>
+ * <ul>
+ * <li><strong>Inventory Mode:</strong> Pass `item`. Shows edit form (Save/Delete).</li>
+ * <li><strong>Library Mode:</strong> Pass `card`. Shows add form (Add to Inventory).</li>
+ * </ul>
+ * </p>
  *
  * @component
- * @param {Object} props - The component props.
+ * @param {Object} props
  * @param {boolean} props.open - Whether the modal is currently visible.
  * @param {Function} props.onClose - Handler to close the modal.
- * @param {Object} props.item - The inventory item object currently selected.
- * @param {Function} props.onSave - Callback passed down to the form for saving changes.
- * @param {Function} props.onDelete - Callback passed down to the form for deleting the item.
- * @param {Array<Object>} [props.warehouses=[]] - Hierarchical list of warehouses (and their nested locations) for the move dropdown.
+ * @param {Object} [props.item] - The existing inventory item (Inventory Mode).
+ * @param {Object} [props.card] - The raw card definition (Library Mode).
+ * @param {Array} props.warehouses - List of warehouses for the dropdowns.
+ * @param {Function} props.onSubmit - Handler for "Save" (Inventory) or "Add" (Library).
+ * @param {Function} [props.onDelete] - Handler for "Delete" (Inventory Mode only).
  * @returns {JSX.Element|null} The rendered modal.
  */
-export default function CardDetailModal({ open, onClose, item, onSave, onDelete, warehouses = [] }) {
-  if (!item) return null;
+export default function CardDetailModal({ open, onClose, item, card, warehouses = [], onSubmit, onDelete }) {
+  // Determine the definition to display. 
+  // If editing an item, grab its definition. If browsing library, use the card directly.
+  const cardDef = item ? item.cardDefinition : card;
 
-  const { cardDefinition: card } = item;
+  if (!cardDef) return null;
 
   return (
     <Dialog 
@@ -58,8 +67,8 @@ export default function CardDetailModal({ open, onClose, item, onSave, onDelete,
           <Grid size={{ xs: 12, md: 5 }} sx={{ bgcolor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
             <Box 
               component="img"
-              src={card.imageUrl} 
-              alt={card.name}
+              src={cardDef.imageUrl} 
+              alt={cardDef.name}
               sx={{ 
                 width: '100%', 
                 maxWidth: '350px', 
@@ -74,11 +83,11 @@ export default function CardDetailModal({ open, onClose, item, onSave, onDelete,
             
             {/* Header (Shared Info) */}
             <Box sx={{ mb: 3 }}>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>{card.name}</Typography>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>{cardDef.name}</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip label={card.set?.name} size="small" variant="outlined" />
-                <Chip label={card.rarity} size="small" variant="outlined" />
-                <Chip label={`#${card.localId}`} size="small" variant="outlined" />
+                <Chip label={cardDef.set?.name} size="small" variant="outlined" />
+                <Chip label={cardDef.rarity} size="small" variant="outlined" />
+                <Chip label={`#${cardDef.localId}`} size="small" variant="outlined" />
               </Box>
             </Box>
 
@@ -87,12 +96,12 @@ export default function CardDetailModal({ open, onClose, item, onSave, onDelete,
             <InventoryItemForm 
               existingItem={item}
               warehouses={warehouses}
-              onSubmit={onSave}
+              onSubmit={onSubmit}
               onDelete={onDelete}
             />
 
             {/* 2. Static Specs (Read-Only Data) */}
-            <CardSpecs cardDefinition={card} />
+            <CardSpecs cardDefinition={cardDef} />
 
           </Grid>
         </Grid>
