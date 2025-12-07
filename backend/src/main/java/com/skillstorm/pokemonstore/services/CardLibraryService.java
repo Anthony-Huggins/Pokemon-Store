@@ -37,7 +37,7 @@ public class CardLibraryService {
      */
     public Page<CardDefinition> getAllCards(int page, int size) {
         // Define the business rule for sorting here
-        Sort sort = Sort.by("set.id").and(Sort.by("localId"));
+        Sort sort = Sort.by("id");
         
         // Build the Pageable object
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -58,7 +58,7 @@ public class CardLibraryService {
      */
     public Page<CardDefinition> searchCards(String name, String cardType, String rarity, String setId, Integer hp, int page, int size) {
         // Sort by Set then ID
-        Pageable pageable = PageRequest.of(page, size, Sort.by("set.id").and(Sort.by("localId")));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
         
         return cardRepo.searchCards(name, cardType, rarity, setId, hp, pageable);
     }
