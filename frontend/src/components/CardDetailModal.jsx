@@ -85,10 +85,10 @@ export default function CardDetailModal({ open, onClose, item, onSave, onDelete,
             {/* 1. Inventory Form (Editable Fields) */}
             {/* Pass the warehouses hierarchy down so the dropdown works */}
             <InventoryItemForm 
-              item={item} 
-              warehouses={warehouses} 
-              onSave={onSave} 
-              onDelete={onDelete} 
+              existingItem={item}
+              warehouses={warehouses}
+              onSubmit={onSave}
+              onDelete={onDelete}
             />
 
             {/* 2. Static Specs (Read-Only Data) */}

@@ -21,23 +21,38 @@ const conditionOptions = [
 ];
 
 /**
- * A form component for editing the dynamic details of a specific inventory item.
- * Allows modifying condition, storage location, price, and markup settings.
+ * A unified form component for BOTH creating and editing inventory items.
+ * <p>
+ * <strong>Modes:</strong>
+ * <ul>
+ * <li><strong>Edit Mode:</strong> Pass `existingItem`. Form pre-fills. Shows "Save" and "Delete".</li>
+ * <li><strong>Create Mode:</strong> Pass `cardDefinition` (but no `existingItem`). Form defaults to NM. Shows "Add".</li>
+ * </ul>
+ * </p>
  *
  * @component
- * @param {Object} props - The component props.
- * @param {Object} props.item - The inventory item object to edit.
- * @param {Array<Object>} props.warehouses - List of available storage locations for the dropdown.
- * @param {Function} props.onSave - Callback function fired when "Save Changes" is clicked. Receives the updated item object.
- * @param {Function} props.onDelete - Callback function fired when "Delete" is clicked. Receives the item ID.
- * @returns {JSX.Element} The rendered form.
+ * @param {Object} props
+ * @param {Object} [props.existingItem] - The item being edited (Edit Mode only).
+ * @param {Object} [props.cardDefinition] - The card definition to link to (Create Mode only).
+ * @param {Array} props.warehouses - List of warehouses for the dropdowns.
+ * @param {Function} props.onSubmit - Handler for Save/Add. Receives the payload object.
+ * @param {Function} [props.onDelete] - Handler for Delete (Edit Mode only).
  */
-export default function InventoryItemForm({ item, warehouses = [], onSave, onDelete }) {
+export default function InventoryItemForm({ 
+    existingItem, 
+    cardDefinition, 
+    warehouses = [], 
+    onSubmit, 
+    onDelete
+}) {
+  const isEditMode = Boolean(existingItem);
+
   // Local state to manage form inputs before saving
   const [formData, setFormData] = useState({
-    condition: '',
+    condition: 'NM',
     setPrice: '',
     matchMarketPrice: false,
+    markupPercentage: 0,
     warehouseId: '', // Intermediate state for the first dropdown
     storageLocationId: ''
   });
@@ -46,19 +61,28 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
    * Effect to populate form data when the passed `item` changes.
    */
   useEffect(() => {
-    if (item) {
-      const currentLoc = item.storageLocation;  
-
+    if (isEditMode && existingItem) {
+      const currentLoc = existingItem.storageLocation;
       setFormData({
-        condition: item.condition || 'NM',
-        setPrice: item.setPrice || '',
-        matchMarketPrice: item.matchMarketPrice || false,
-        markupPercentage: item.markupPercentage || 0,
+        condition: existingItem.condition || 'NM',
+        setPrice: existingItem.setPrice || '',
+        matchMarketPrice: existingItem.matchMarketPrice || false,
+        markupPercentage: existingItem.markupPercentage || 0,
         warehouseId: currentLoc?.warehouse?.id || '', 
         storageLocationId: currentLoc?.id || ''
       });
+    } else {
+      // Reset to defaults for Create Mode
+      setFormData({
+        condition: 'NM',
+        setPrice: '',
+        matchMarketPrice: false,
+        markupPercentage: 0,
+        warehouseId: '',
+        storageLocationId: ''
+      });
     }
-  }, [item]);
+  }, [existingItem, isEditMode]);
 
   /**
    * Handles changes to input fields.
@@ -84,25 +108,34 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
   /**
    * Constructs the updated item object and calls the parent onSave handler.
    */
-  const handleSaveClick = () => {
-    const updatedItem = {
-      ...item,
+  const handleSubmit = () => {
+    // 1. Build the base payload (shared fields)
+    const payload = {
       condition: formData.condition,
-      // If matching market price, we clear the manual setPrice
       setPrice: formData.matchMarketPrice ? null : formData.setPrice,
       matchMarketPrice: formData.matchMarketPrice,
       markupPercentage: formData.markupPercentage,
-      // Reconstruct the nested storageLocation object for the backend
-      storageLocation: { id: formData.storageLocationId } 
+      storageLocation: { id: formData.storageLocationId }
     };
-    onSave(updatedItem);
+
+    // 2. Add specific fields based on mode
+    if (isEditMode) {
+      // Edit: Merge with existing item ID
+      onSubmit({ ...existingItem, ...payload });
+    } else {
+      // Create: Attach the Card Definition ID
+      payload.cardDefinition = { id: cardDefinition.id };
+      onSubmit(payload);
+    }
   };
 
   const availableLocations = warehouses.find(w => w.id === formData.warehouseId)?.storageLocations || [];
 
   return (
     <>
-      <Divider sx={{ mb: 3 }}>INVENTORY SETTINGS</Divider>
+      <Divider sx={{ mb: 3 }}>
+        {isEditMode ? 'INVENTORY SETTINGS' : 'ADD TO INVENTORY'}
+      </Divider>
       <Grid container spacing={3}>
         {/* Condition Selection */}
         <Grid size={6}>
@@ -134,17 +167,17 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
         {/* 2. Storage Location (Child Dropdown) */}
         <Grid size={12}>
           <TextField
-            select fullWidth label="Binder / Shelf" name="storageLocationId"
+            select fullWidth label="Storage Location" name="storageLocationId"
             value={formData.storageLocationId} onChange={handleChange} size="small"
             disabled={!formData.warehouseId} 
           >
             {/* --- SAFETY FIX START --- */}
             {/* Always render the current value so MUI doesn't complain about "out of range".
                 We use display: none so the user doesn't see it twice in the list. */}
-            {item.storageLocation && (
-               <MenuItem value={item.storageLocation.id} sx={{ display: 'none' }}>
-                 {item.storageLocation.name}
-               </MenuItem>
+            {isEditMode && existingItem?.storageLocation && (
+              <MenuItem value={existingItem.storageLocation.id} sx={{ display: 'none' }}>
+                {existingItem.storageLocation.name}
+              </MenuItem>
             )}
             {/* --- SAFETY FIX END --- */}
 
@@ -184,12 +217,26 @@ export default function InventoryItemForm({ item, warehouses = [], onSave, onDel
 
       {/* Action Buttons */}
       <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-        <Button variant="contained" startIcon={<SaveIcon />} fullWidth onClick={handleSaveClick}>
-          Save Changes
+        <Button 
+          variant="contained" 
+          fullWidth 
+          size="large"
+          startIcon={isEditMode ? <SaveIcon /> : <AddCircleIcon />} 
+          onClick={handleSubmit}
+          disabled={!formData.storageLocationId} // Block submit if no location
+        >
+          {isEditMode ? 'Save Changes' : 'Add to Inventory'}
         </Button>
-        <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => onDelete(item.id)}>
-          Delete
-        </Button>
+        {isEditMode && (
+          <Button 
+            variant="outlined" 
+            color="error" 
+            startIcon={<DeleteIcon />} 
+            onClick={() => onDelete(existingItem.id)}
+          >
+            Delete
+          </Button>
+        )}
       </Box>
     </>
   );
