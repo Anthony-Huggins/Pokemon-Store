@@ -97,7 +97,9 @@ export default function WarehouseCard({ warehouse, onEdit, onManageLocations }) 
       <CardActions sx={{ p: 2, pt: 0 }}>
         <Button 
           fullWidth 
-          variant="outlined" 
+          variant="contained" // <--- CHANGED: Filled in
+          color="inherit"     // Optional: Makes it grey/neutral to distinguish from the primary "Manage" button
+          sx={{ bgcolor: 'action.selected', color: 'text.primary' }} // Custom styling for a nice "Secondary Filled" look
           startIcon={<EditIcon />} 
           onClick={() => onEdit(warehouse)}
         >
@@ -109,7 +111,7 @@ export default function WarehouseCard({ warehouse, onEdit, onManageLocations }) 
           startIcon={<InventoryIcon />} 
           onClick={() => onManageLocations(warehouse)}
         >
-          Manage Locations
+          Manage Store
         </Button>
       </CardActions>
     </Card>
