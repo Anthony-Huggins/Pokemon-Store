@@ -1,15 +1,25 @@
-import { Typography, Container } from '@mui/material';
+import { Routes, Route } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+
+// Import Pages
+import Dashboard from './pages/Dashboard';
+import Inventory from './pages/Inventory';
+import Warehouses from './pages/Warehouses';
+import CardLibrary from './pages/CardLibrary';
+import SyncManager from './pages/SyncManager';
 
 function App() {
   return (
-    <Container>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Pokemon Inventory
-      </Typography>
-      <Typography variant="body1">
-        Backend Connection: Pending...
-      </Typography>
-    </Container>
+    <Routes>
+      {/* The Layout wraps all these routes */}
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="inventory" element={<Inventory />} />
+        <Route path="warehouses" element={<Warehouses />} />
+        <Route path="library" element={<CardLibrary />} />
+        <Route path="sync" element={<SyncManager />} />
+      </Route>
+    </Routes>
   );
 }
 
