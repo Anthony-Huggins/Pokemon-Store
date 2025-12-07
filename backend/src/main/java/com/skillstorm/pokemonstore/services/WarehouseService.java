@@ -48,4 +48,26 @@ public class WarehouseService {
         }
         warehouseRepo.deleteById(id);
     }
+
+    /**
+     * Updates an existing warehouse details.
+     * @param warehouse The warehouse object with updated fields.
+     * @return The updated entity.
+     */
+    public Warehouse updateWarehouse(Warehouse warehouse) {
+        // 1. Fetch existing
+        Warehouse existing = warehouseRepo.findById(warehouse.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse ID " + warehouse.getId() + " not found."));
+
+        // 2. Update fields if provided
+        if (warehouse.getName() != null) {
+            existing.setName(warehouse.getName());
+        }
+        if (warehouse.getLocation() != null) {
+            existing.setLocation(warehouse.getLocation());
+        }
+
+        // 3. Save
+        return warehouseRepo.save(existing);
+    }
 }

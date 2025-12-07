@@ -6,6 +6,8 @@ import com.skillstorm.pokemonstore.models.Warehouse;
 import com.skillstorm.pokemonstore.repositories.StorageLocationRepository;
 import com.skillstorm.pokemonstore.repositories.WarehouseRepository;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -51,5 +53,40 @@ public class StorageLocationService {
             throw new ResourceNotFoundException("Storage Location with ID " + id + " not found.");
         }
         storageRepo.deleteById(id);
+    }
+
+    /**
+     * Retrieves ALL storage locations across all warehouses.
+     * @return List of all locations.
+     */
+    public List<StorageLocation> getAllStorageLocations() {
+        return storageRepo.findAll();
+    }
+
+    /**
+     * Updates a storage location.
+     * Supports renaming, changing capacity, or moving to a new warehouse.
+     * @param location The location with updated fields.
+     * @return The updated entity.
+     */
+    public StorageLocation updateStorageLocation(StorageLocation location) {
+        StorageLocation existing = storageRepo.findById(location.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Location ID " + location.getId() + " not found."));
+
+        // Update basic fields
+        if (location.getName() != null) existing.setName(location.getName());
+        if (location.getType() != null) existing.setType(location.getType());
+        if (location.getMaxCapacity() != null) existing.setMaxCapacity(location.getMaxCapacity());
+
+        // Handle Moving to a different Warehouse
+        if (location.getWarehouse() != null) {
+            Integer newWarehouseId = location.getWarehouse().getId();
+            Warehouse newWarehouse = warehouseRepository.findById(newWarehouseId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Warehouse ID " + newWarehouseId + " not found."));
+            
+            existing.setWarehouse(newWarehouse);
+        }
+
+        return storageRepo.save(existing);
     }
 }

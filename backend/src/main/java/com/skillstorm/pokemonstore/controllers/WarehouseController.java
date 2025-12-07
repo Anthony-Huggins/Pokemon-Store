@@ -65,4 +65,14 @@ public class WarehouseController {
         warehouseService.deleteWarehouse(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Updates an existing warehouse.
+     * @param warehouse The warehouse with updated properties.
+     * @return The updated entity.
+     */
+    @PutMapping
+    public ResponseEntity<Warehouse> updateWarehouse(@RequestBody Warehouse warehouse) {
+        return ResponseEntity.ok(warehouseService.updateWarehouse(warehouse));
+    }
 }

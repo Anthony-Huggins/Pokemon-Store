@@ -2,6 +2,9 @@ package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.StorageLocation;
 import com.skillstorm.pokemonstore.services.StorageLocationService;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,5 +55,25 @@ public class StorageLocationController {
     public ResponseEntity<Void> deleteLocation(@PathVariable Integer id) {
         storageLocationService.deleteStorageLocation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Retrieves ALL storage locations (flat list).
+     * Useful for admin tables or dropdowns.
+     * @return List of all locations.
+     */
+    @GetMapping
+    public ResponseEntity<List<StorageLocation>> getAllLocations() {
+        return ResponseEntity.ok(storageLocationService.getAllStorageLocations());
+    }
+
+    /**
+     * Updates a storage location (Rename, Resize, or Move).
+     * @param location The location data to update.
+     * @return The updated entity.
+     */
+    @PutMapping
+    public ResponseEntity<StorageLocation> updateLocation(@RequestBody StorageLocation location) {
+        return ResponseEntity.ok(storageLocationService.updateStorageLocation(location));
     }
 }
