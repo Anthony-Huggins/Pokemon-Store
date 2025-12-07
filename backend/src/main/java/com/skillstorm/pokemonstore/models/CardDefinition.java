@@ -30,7 +30,7 @@ public class CardDefinition {
      * The expansion set this card belongs to.
      * Fetched lazily to optimize performance when loading large lists of cards.
      */
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "set_id", referencedColumnName = "id")
     private CardSet set;
 
