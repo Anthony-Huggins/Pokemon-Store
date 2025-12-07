@@ -95,6 +95,7 @@ export default function CardDetailModal({ open, onClose, item, card, warehouses 
             {/* Pass the warehouses hierarchy down so the dropdown works */}
             <InventoryItemForm 
               existingItem={item}
+              cardDefinition={cardDef}
               warehouses={warehouses}
               onSubmit={onSubmit}
               onDelete={onDelete}

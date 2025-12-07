@@ -23,7 +23,7 @@ import {
  * @param {Object} [props.card] - The raw card definition (if item is not present).
  * @param {Function} props.onClick - Handler called with the object passed in (item or card).
  */
-export default function InventoryCard({ item, onClick }) {
+export default function InventoryCard({ item, card, onClick }) {
   // Determine which object to display
   // If 'item' exists, we are in Inventory Mode. If not, use 'card' (Library Mode).
   const cardDef = item ? item.cardDefinition : card;
