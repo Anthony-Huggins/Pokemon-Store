@@ -4,6 +4,8 @@ import com.skillstorm.pokemonstore.models.CardDefinition;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -28,4 +30,31 @@ public interface CardDefinitionRepository extends JpaRepository<CardDefinition, 
      * @return A Page of cards with images.
      */
     Page<CardDefinition> findByImageUrlIsNotNull(Pageable pageable);
+
+    /**
+     * Searches for cards matching specific criteria.
+     * Joins with 'types' and 'set' tables to allow deep filtering.
+     * 'DISTINCT' is required because joining a list (types) can produce duplicate rows.
+     * 
+     * @param pageable Pagination info.
+     * @return A Page of cards with images.
+     */
+    @Query("SELECT DISTINCT c FROM CardDefinition c " +
+            "LEFT JOIN c.types t " + // Join types table
+            "JOIN c.set s " +        // Join set table
+            "WHERE c.imageUrl IS NOT NULL " + // Only show cards with images
+            "AND (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
+            "AND (:cardType IS NULL OR t = :cardType) " +
+            "AND (:rarity IS NULL OR c.rarity = :rarity) " +
+            "AND (:setId IS NULL OR s.id = :setId) " + 
+            "AND (:hp IS NULL OR c.hp = :hp)")
+
+        Page<CardDefinition> searchCards(
+            @Param("name") String name,
+            @Param("cardType") String cardType,
+            @Param("rarity") String rarity,
+            @Param("setId") String setId,
+            @Param("hp") Integer hp,
+            Pageable pageable
+    );
 }

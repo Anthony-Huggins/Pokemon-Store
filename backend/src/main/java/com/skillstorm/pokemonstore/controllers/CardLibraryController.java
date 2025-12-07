@@ -46,8 +46,21 @@ public class CardLibraryController {
     @GetMapping
     public ResponseEntity<Page<CardDefinition>> getAllCards(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "18") int size
+            @RequestParam(defaultValue = "24") int size
     ) {
         return ResponseEntity.ok(libraryService.getAllCards(page, size));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<CardDefinition>> searchCards(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String cardType,
+            @RequestParam(required = false) String rarity,
+            @RequestParam(required = false) String setId,
+            @RequestParam(required = false) Integer hp,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size
+    ) {
+        return ResponseEntity.ok(libraryService.searchCards(name, cardType, rarity, setId, hp, page, size));
     }
 }

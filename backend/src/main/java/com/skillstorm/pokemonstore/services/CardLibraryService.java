@@ -44,4 +44,22 @@ public class CardLibraryService {
         
         return cardRepo.findByImageUrlIsNotNull(pageable);
     }
+
+    /**
+     * Searches for cards based on various criteria.
+     *
+     * @param name      Partial or full name of the card.
+     * @param cardType  Type of the card (e.g., "Fire", "Water").
+     * @param rarity    Rarity level (e.g., "Common", "Rare").
+     * @param setId     Expansion set ID.
+     * @param page      Zero-based page index.
+     * @param size      Number of records per page.
+     * @return A Page of CardDefinitions matching the search criteria.
+     */
+    public Page<CardDefinition> searchCards(String name, String cardType, String rarity, String setId, Integer hp, int page, int size) {
+        // Sort by Set then ID
+        Pageable pageable = PageRequest.of(page, size, Sort.by("set.id").and(Sort.by("localId")));
+        
+        return cardRepo.searchCards(name, cardType, rarity, setId, hp, pageable);
+    }
 }
