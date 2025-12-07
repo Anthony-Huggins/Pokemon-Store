@@ -1,7 +1,6 @@
 package com.skillstorm.pokemonstore.models;
 
 import com.skillstorm.pokemonstore.models.enums.CardCondition;
-import com.skillstorm.pokemonstore.models.enums.VariantType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -47,12 +46,6 @@ public class InventoryItem {
     @Column(nullable = false)
     private CardCondition condition;
 
-    /**
-     * The printing variant (Holo, Reverse, Normal).
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private VariantType variant;
 
 
     // --- Pricing Fields ---
@@ -149,18 +142,6 @@ public class InventoryItem {
     public void setCondition(CardCondition condition) { this.condition = condition; }
 
     /**
-     * Gets the variant.
-     * @return The VariantType enum.
-     */
-    public VariantType getVariant() { return variant; }
-
-    /**
-     * Sets the variant.
-     * @param variant The VariantType enum.
-     */
-    public void setVariant(VariantType variant) { this.variant = variant; }
-
-    /**
      * Gets the manual price.
      * @return The price or null.
      */
@@ -240,7 +221,6 @@ public class InventoryItem {
                 "id=" + id +
                 ", card=" + (cardDefinition != null ? cardDefinition.getName() : "null") +
                 ", condition=" + condition +
-                ", variant=" + variant +
                 '}';
     }
 }

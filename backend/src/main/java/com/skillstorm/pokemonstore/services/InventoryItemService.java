@@ -107,7 +107,6 @@ public class InventoryItemService {
         // 4. Update other fields (Quantity, Price, etc.)
         if (item.getSetPrice() != null) existingItem.setSetPrice(item.getSetPrice());
         if (item.getCondition() != null) existingItem.setCondition(item.getCondition());
-        if (item.getVariant() != null) existingItem.setVariant(item.getVariant());
         if (item.getMatchMarketPrice() != null) existingItem.setMatchMarketPrice(item.getMatchMarketPrice());
         if (item.getMarkupPercentage() != null) existingItem.setMarkupPercentage(item.getMarkupPercentage());
 
