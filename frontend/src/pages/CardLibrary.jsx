@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Box, Grid, Paper, Pagination, Typography, LinearProgress, Snackbar, Alert } from '@mui/material';
+import {
+  Box, Grid, Paper, Pagination, Typography, LinearProgress, Snackbar, Alert,
+  Stack, TextField, MenuItem, Button, InputAdornment
+} from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import api from '../api/axiosConfig';
 import InventoryCard from '../components/InventoryCard';
 import CardDetailModal from '../components/CardDetailModal';
+
+// Filter constants
+const cardTypes = ['Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Fairy', 'Colorless'];
+const rarities = ["ACE SPEC Rare","Amazing Rare","Black White Rare","Classic Collection","Common","Crown","Double rare","Four Diamond","Full Art Trainer","Holo Rare","Holo Rare V","Holo Rare VMAX","Holo Rare VSTAR","Hyper rare","Illustration rare","LEGEND","Mega Hyper Rare","None","One Diamond","One Shiny","One Star","Radiant Rare","Rare","Rare Holo","Rare Holo LV.X","Rare PRIME","Secret Rare","Shiny rare","Shiny rare V","Shiny rare VMAX","Shiny Ultra Rare","Special illustration rare","Three Diamond","Three Star","Two Diamond","Two Shiny","Two Star","Ultra Rare","Uncommon"];
 
 /**
  * Main Card Library Page.
@@ -17,11 +26,19 @@ export default function CardLibrary() {
   // --- State ---
   const [cards, setCards] = useState([]);
   const [warehouses, setWarehouses] = useState([]); // Needed for the "Add to Inventory" dropdowns
+  const [sets, setSets] = useState([]);
   const [loading, setLoading] = useState(false);
   
   // Pagination State
   const [page, setPage] = useState(1); // MUI Pagination is 1-indexed
   const [totalPages, setTotalPages] = useState(1);
+  const [filters, setFilters] = useState({
+    name: '',
+    cardType: '',
+    rarity: '',
+    setId: '',
+    hp: ''
+  });
   const PAGE_SIZE = 24; // 6 cols x 4 rows
 
   // Modal & Notification State
@@ -30,39 +47,81 @@ export default function CardLibrary() {
   const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
   /**
-   * Fetches the current page of cards and the warehouse list on mount or page change.
+   * Fetches warehouses and sets on mount.
    */
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // Fetch Cards (Page is 0-indexed in backend, 1-indexed in MUI)
-        const cardsRes = await api.get(`/library?page=${page - 1}&size=${PAGE_SIZE}`);
-        setCards(cardsRes.data.content);
-        setTotalPages(cardsRes.data.totalPages);
-
-        // Fetch Warehouses (for the Add Modal dropdowns) - only need to do this once technically
-        if (warehouses.length === 0) {
-            const whRes = await api.get('/warehouses');
-            setWarehouses(whRes.data);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [page]); 
+    api.get('/warehouses').then(res => setWarehouses(res.data));
+    api.get('/library/sets').then(res => setSets(res.data));
+  }, []);
 
   /**
-   * Handles pagination clicks.
-   * @param {object} event - The change event.
+   * Fetches cards from the backend based on current filters and pagination.
+   * 
+   */
+  const fetchCards = async () => {
+    setLoading(true);
+    try {
+      // 1. Create a clean params object
+      // We only want to include keys that actually have a value
+      const activeFilters = {};
+      
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== '' && filters[key] !== null) {
+          activeFilters[key] = filters[key];
+        }
+      });
+
+      // 2. Determine Endpoint
+      // If we have any active filters (keys > 0), use search. Otherwise get all.
+      const hasActiveFilters = Object.keys(activeFilters).length > 0;
+      const endpoint = hasActiveFilters ? '/library/search' : '/library';
+
+      // 3. Send Request
+      const response = await api.get(endpoint, {
+        params: {
+          page: page - 1, 
+          size: PAGE_SIZE,
+          ...activeFilters // <--- Only send the non-empty filters
+        }
+      });
+
+      setCards(response.data.content);
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * 
+   * Effect to fetch cards when page or filters change.
+   */
+  useEffect(() => {
+    fetchCards();
+  }, [page]);
+
+  /**
+   * Handles page changes from the Pagination component.
+   * @param {React.ChangeEvent<unknown>} event - The change event.
    * @param {number} value - The new page number.
    */
   const handlePageChange = (event, value) => {
     setPage(value);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top for better UX
+  };
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+    setPage(1); // Reset to page 1 on filter change
+  };
+
+  /**
+   * Handles the Search button click to fetch cards based on current filters.
+   *
+   */
+  const handleSearchClick = () => {
+    setPage(1);
+    fetchCards();
   };
 
   /**
@@ -84,18 +143,56 @@ export default function CardLibrary() {
 
   return (
     <Box sx={{ height: '100%', width: '100%' }}>
-      {/* Top Bar (Pagination) */}
-      <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" fontWeight="bold">Card Library</Typography>
-        <Pagination 
-          count={totalPages} 
-          page={page} 
-          onChange={handlePageChange} 
-          color="primary" 
-          showFirstButton 
-          showLastButton 
-        />
+      
+      {/* FILTER BAR */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
+          <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
+            <FilterAltIcon color="primary" sx={{ mr: 1 }} />
+            <Typography variant="h6" fontWeight="bold">Library</Typography>
+          </Box>
+
+          <TextField 
+            label="Search Name" name="name" 
+            value={filters.name} onChange={handleFilterChange} size="small" sx={{ flexGrow: 1 }}
+            InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+          />
+
+          <TextField select label="Set" name="setId" value={filters.setId} onChange={handleFilterChange} size="small" sx={{ width: 150 }}>
+            <MenuItem value="">All Sets</MenuItem>
+            {sets.map(s => <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>)}
+          </TextField>
+
+          <TextField select label="Type" name="cardType" value={filters.cardType} onChange={handleFilterChange} size="small" sx={{ width: 120 }}>
+            <MenuItem value="">All</MenuItem>
+            {cardTypes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+          </TextField>
+
+          <TextField select label="Rarity" name="rarity" value={filters.rarity} onChange={handleFilterChange} size="small" sx={{ width: 120 }}>
+            <MenuItem value="">All</MenuItem>
+            {rarities.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+          </TextField>
+          
+          <TextField 
+            label="HP" // Just "HP" implies exact
+            name="hp"  // Match state name
+            type="number"
+            value={filters.hp} 
+            onChange={handleFilterChange} 
+            size="small" 
+            sx={{ width: 80 }} // Made slightly narrower
+            InputProps={{ inputProps: { min: 0, step: 10 } }}
+          />
+
+          <Button variant="contained" onClick={handleSearchClick}>Search</Button>
+        </Stack>
       </Paper>
+      
+      {/* Top Bar (Pagination) */}
+      {/* PAGINATION (Top) */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+        <Pagination count={totalPages} page={page} onChange={(e, v) => { setPage(v); window.scrollTo({top:0, behavior:'smooth'}); }} color="primary" showFirstButton showLastButton />
+      </Box>
 
       {loading && <LinearProgress sx={{ mb: 2 }} />}
 
