@@ -168,6 +168,11 @@ export default function CardLibrary() {
             label="Search Name" name="name" 
             value={filters.name} onChange={handleFilterChange} size="small" sx={{ flexGrow: 1 }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSearchClick();
+              }
+            }}
           />
 
           <TextField select label="Set" name="setId" value={filters.setId} onChange={handleFilterChange} size="small" sx={{ width: 150 }}>

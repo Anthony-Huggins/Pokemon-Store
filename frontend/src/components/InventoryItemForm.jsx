@@ -131,7 +131,8 @@ export default function InventoryItemForm({
   };
 
   const availableLocations = warehouses.find(w => w.id === formData.warehouseId)?.storageLocations || [];
-
+  const hasPriceError = !formData.matchMarketPrice && (formData.setPrice === '' || formData.setPrice === null);
+  
   return (
     <>
       <Divider sx={{ mb: 3 }}>
@@ -208,8 +209,16 @@ export default function InventoryItemForm({
             />
           ) : (
             <TextField
-              fullWidth label="Manual Price" name="setPrice" type="number"
-              value={formData.setPrice} onChange={handleChange} size="small"
+              fullWidth 
+              label="Manual Price" 
+              name="setPrice" 
+              type="number"
+              value={formData.setPrice} 
+              onChange={handleChange} 
+              size="small"
+              required // Visual indicator
+              error={hasPriceError} // Turns red if empty
+              helperText={hasPriceError ? "Price is required" : ""}
               InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
             />
           )}
@@ -224,7 +233,7 @@ export default function InventoryItemForm({
           size="large"
           startIcon={isEditMode ? <SaveIcon /> : <AddCircleIcon />} 
           onClick={handleSubmit}
-          disabled={!formData.storageLocationId} // Block submit if no location
+          disabled={!formData.storageLocationId || hasPriceError} // Block submit if no location
         >
           {isEditMode ? 'Save Changes' : 'Add to Inventory'}
         </Button>
