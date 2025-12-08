@@ -6,6 +6,8 @@ import com.skillstorm.pokemonstore.models.Warehouse;
 import com.skillstorm.pokemonstore.repositories.StorageLocationRepository;
 import com.skillstorm.pokemonstore.repositories.WarehouseRepository;
 
+import jakarta.transaction.Transactional;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -48,11 +50,28 @@ public class StorageLocationService {
      * @param id The location ID.
      * @throws ResourceNotFoundException if the location does not exist.
      */
+    @Transactional
     public void deleteStorageLocation(Integer id) {
-        if (!storageRepo.existsById(id)) {
-            throw new ResourceNotFoundException("Storage Location with ID " + id + " not found.");
+        // 1. Fetch the child
+        StorageLocation location = storageRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Storage Location with ID " + id + " not found."));
+
+        // 2. Get the parent
+        Warehouse parent = location.getWarehouse();
+
+        // 3. Remove the child from the parent's list
+        // Note: This relies on StorageLocation.equals() using the ID (which we added previously)
+        if (parent != null) {
+            parent.getStorageLocations().remove(location);
+            
+            // 4. Save the parent
+            // Since orphanRemoval=true in Warehouse.java, Hibernate interprets 
+            // removal from the list as a DELETE SQL command.
+            warehouseRepository.save(parent); 
+        } else {
+            // Fallback for orphaned records
+            storageRepo.delete(location);
         }
-        storageRepo.deleteById(id);
     }
 
     /**
