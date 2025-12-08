@@ -46,11 +46,20 @@ export default function CardLibrary() {
   const [modalOpen, setModalOpen] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
+  const fetchWarehouses = async () => {
+    try {
+      const res = await api.get('/warehouses');
+      setWarehouses(res.data);
+    } catch (error) {
+      console.error("Failed to load warehouses:", error);
+    }
+  };
+
   /**
    * Fetches warehouses and sets on mount.
    */
   useEffect(() => {
-    api.get('/warehouses').then(res => setWarehouses(res.data));
+    fetchWarehouses();
     api.get('/library/sets').then(res => setSets(res.data));
   }, []);
 
@@ -131,6 +140,9 @@ export default function CardLibrary() {
   const handleAddCard = async (newItemPayload) => {
     try {
       await api.post('/inventory', newItemPayload);
+
+      fetchWarehouses(); // Refresh warehouse data to update counts
+
       setNotification({ open: true, message: 'Card added to Inventory!', type: 'success' });
       setModalOpen(false);
     } catch (error) {
