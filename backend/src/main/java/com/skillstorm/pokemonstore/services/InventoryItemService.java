@@ -7,6 +7,8 @@ import com.skillstorm.pokemonstore.models.StorageLocation;
 import com.skillstorm.pokemonstore.repositories.CardDefinitionRepository;
 import com.skillstorm.pokemonstore.repositories.InventoryItemRepository;
 import com.skillstorm.pokemonstore.repositories.StorageLocationRepository;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -134,10 +136,16 @@ public class InventoryItemService {
     }
 
     /**
-     * Retrieves all inventory items across all locations.
-     * @return List of all inventory items.
+     * Searches the inventory based on various criteria.
+     *
+     * @param name         Partial or full name of the card.
+     * @param rarity       Rarity level (e.g., "Common", "Rare").
+     * @param locationId   ID of the storage location (binder/case).
+     * @param warehouseId  ID of the warehouse.
+     * @param sort         Sorting criteria (e.g., "name,asc").
+     * @return List of matching inventory items.
      */
-    public List<InventoryItem> getAllItems() {
-        return inventoryRepo.findAll();
+    public List<InventoryItem> searchInventory(String name, String rarity, Integer locationId, Integer warehouseId, Sort sort) {
+        return inventoryRepo.searchInventory(name, rarity, locationId, warehouseId, sort);
     }
 }

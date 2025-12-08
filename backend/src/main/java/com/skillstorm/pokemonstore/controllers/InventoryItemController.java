@@ -2,6 +2,8 @@ package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.InventoryItem;
 import com.skillstorm.pokemonstore.services.InventoryItemService;
+
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +33,24 @@ public class InventoryItemController {
     }
 
     /**
-     * Retrieves all inventory items across all locations.
+     * Searches the inventory based on various criteria.
      *
-     * @return List of all inventory items.
+     * @param name         Partial or full name of the card.
+     * @param rarity       Rarity level (e.g., "Common", "Rare").
+     * @param locationId   ID of the storage location (binder/case).
+     * @param warehouseId  ID of the warehouse.
+     * @param sort         Sorting criteria (e.g., "name,asc").
+     * @return List of matching inventory items.
      */
     @GetMapping
-    public ResponseEntity<List<InventoryItem>> getAllItems() {
-        return ResponseEntity.ok(inventoryItemService.getAllItems());
+    public ResponseEntity<List<InventoryItem>> searchInventory(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String rarity,
+            @RequestParam(required = false) Integer locationId,
+            @RequestParam(required = false) Integer warehouseId,
+            Sort sort // <--- Spring automatically parses "?sort=field,dir" into this object
+    ) {
+        return ResponseEntity.ok(inventoryItemService.searchInventory(name, rarity, locationId, warehouseId, sort));
     }
 
     /**
