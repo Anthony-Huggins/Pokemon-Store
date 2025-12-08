@@ -36,7 +36,6 @@ public class InventoryItemController {
      * Searches the inventory based on various criteria.
      *
      * @param name         Partial or full name of the card.
-     * @param rarity       Rarity level (e.g., "Common", "Rare").
      * @param locationId   ID of the storage location (binder/case).
      * @param warehouseId  ID of the warehouse.
      * @param sort         Sorting criteria (e.g., "name,asc").
@@ -45,12 +44,11 @@ public class InventoryItemController {
     @GetMapping
     public ResponseEntity<List<InventoryItem>> searchInventory(
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String rarity,
             @RequestParam(required = false) Integer locationId,
             @RequestParam(required = false) Integer warehouseId,
             Sort sort // <--- Spring automatically parses "?sort=field,dir" into this object
     ) {
-        return ResponseEntity.ok(inventoryItemService.searchInventory(name, rarity, locationId, warehouseId, sort));
+        return ResponseEntity.ok(inventoryItemService.searchInventory(name, locationId, warehouseId, sort));
     }
 
     /**

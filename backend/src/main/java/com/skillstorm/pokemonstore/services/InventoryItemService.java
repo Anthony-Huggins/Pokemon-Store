@@ -139,13 +139,12 @@ public class InventoryItemService {
      * Searches the inventory based on various criteria.
      *
      * @param name         Partial or full name of the card.
-     * @param rarity       Rarity level (e.g., "Common", "Rare").
      * @param locationId   ID of the storage location (binder/case).
      * @param warehouseId  ID of the warehouse.
      * @param sort         Sorting criteria (e.g., "name,asc").
      * @return List of matching inventory items.
      */
-    public List<InventoryItem> searchInventory(String name, String rarity, Integer locationId, Integer warehouseId, Sort sort) {
-        return inventoryRepo.searchInventory(name, rarity, locationId, warehouseId, sort);
+    public List<InventoryItem> searchInventory(String name, Integer locationId, Integer warehouseId, Sort sort) {
+        return inventoryRepo.searchInventory(name, locationId, warehouseId, sort);
     }
 }

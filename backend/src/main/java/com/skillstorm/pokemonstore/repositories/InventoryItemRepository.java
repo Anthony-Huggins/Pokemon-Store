@@ -54,7 +54,6 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
      * Searches the inventory based on various criteria.
      *
      * @param name         Partial or full name of the card.
-     * @param rarity       Rarity level (e.g., "Common", "Rare").
      * @param locationId   ID of the storage location (binder/case).
      * @param warehouseId  ID of the warehouse.
      * @param sort         Sorting criteria (e.g., "name,asc").
@@ -64,12 +63,11 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
            "JOIN i.cardDefinition c " +
            "JOIN i.storageLocation s " +
            "WHERE (:name IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
-           "AND (:rarity IS NULL OR c.rarity = :rarity) " +
+           "AND (:cardType IS NULL OR :cardType MEMBER OF c.types) " +
            "AND (:locationId IS NULL OR s.id = :locationId) " +
            "AND (:warehouseId IS NULL OR s.warehouse.id = :warehouseId)")
     List<InventoryItem> searchInventory(
             @Param("name") String name,
-            @Param("rarity") String rarity,
             @Param("locationId") Integer locationId,
             @Param("warehouseId") Integer warehouseId,
             Sort sort // <--- Add this as the last parameter
