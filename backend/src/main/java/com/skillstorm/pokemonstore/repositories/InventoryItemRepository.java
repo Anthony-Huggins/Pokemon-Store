@@ -63,7 +63,6 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
            "JOIN i.cardDefinition c " +
            "JOIN i.storageLocation s " +
            "WHERE (:name IS NULL OR LOWER(CAST(c.name AS string)) LIKE LOWER(CONCAT('%', CAST(:name AS string), '%'))) " +
-           "AND (:cardType IS NULL OR :cardType MEMBER OF c.types) " +
            "AND (:locationId IS NULL OR s.id = :locationId) " +
            "AND (:warehouseId IS NULL OR s.warehouse.id = :warehouseId)")
     List<InventoryItem> searchInventory(
