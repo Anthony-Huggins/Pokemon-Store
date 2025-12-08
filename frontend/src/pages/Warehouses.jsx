@@ -157,6 +157,7 @@ export default function Warehouses() {
         open={locationsModalOpen}
         onClose={() => setLocationsModalOpen(false)}
         warehouse={activeWarehouse}
+        allWarehouses={warehouses}
         onAddLocation={handleAddLocation}
         onUpdateLocation={handleUpdateLocation}
         onDeleteLocation={handleDeleteLocation}
