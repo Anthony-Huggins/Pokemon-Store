@@ -173,6 +173,9 @@ export default function Inventory() {
       // Refresh warehouse counts (e.g. 25/50 -> 26/50)
       fetchWarehouses(); 
       
+      // refetch the inventory to ensure all filters/sorts are respected
+      fetchInventory();
+
       setNotification({ open: true, message: "Item updated!", type: 'success' });
       setModalOpen(false);
     } catch (error) {
@@ -192,7 +195,11 @@ export default function Inventory() {
       await api.delete(`/inventory/${itemId}`);
       
       setItems(prev => prev.filter(i => i.id !== itemId));
+
       fetchWarehouses();
+      
+       // refetch the inventory to ensure all filters/sorts are respected
+      fetchInventory();
       
       setNotification({ open: true, message: "Item deleted.", type: 'success' });
       setModalOpen(false);
