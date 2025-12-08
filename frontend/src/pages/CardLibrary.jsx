@@ -206,7 +206,7 @@ export default function CardLibrary() {
         <Pagination count={totalPages} page={page} onChange={(e, v) => { setPage(v); window.scrollTo({top:0, behavior:'smooth'}); }} color="primary" showFirstButton showLastButton />
       </Box>
 
-      {loading && <LinearProgress sx={{ mb: 2 }} />}
+    
 
       <Grid container spacing={2}>
         {cards.map((card) => (
