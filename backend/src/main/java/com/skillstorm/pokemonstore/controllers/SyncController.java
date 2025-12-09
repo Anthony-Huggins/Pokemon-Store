@@ -27,8 +27,27 @@ public class SyncController {
         this.priceSyncService = priceSyncService;
     }
 
+    // --- ENDPOINTS ---
+
+    @GetMapping("/sets")
+    public SseEmitter syncAllSets() {
+        return streamTask(cardSyncService::syncAllSets);
+    }
+
+    @GetMapping("/prices/inventory")
+    public SseEmitter syncInventoryPrices() {
+        return streamTask(priceSyncService::syncInventoryPrices);
+    }
+
+    @GetMapping("/prices/library")
+    public SseEmitter syncLibraryPrices() {
+        return streamTask(priceSyncService::syncLibraryPrices);
+    }
+
     /**
-     * Helper to create an SSE stream and handle the background execution.
+     * Helper method to stream progress updates via SSE.    
+     * @param task   The sync task to run in the background.
+     * @return
      */
     private SseEmitter streamTask(RunnableWithProgress task) {
         // Timeout: 60 minutes (enough for full library sync)
@@ -63,20 +82,5 @@ public class SyncController {
         void run(java.util.function.Consumer<Integer> progressCallback);
     }
 
-    // --- ENDPOINTS ---
-
-    @GetMapping("/sets")
-    public SseEmitter syncAllSets() {
-        return streamTask(cardSyncService::syncAllSets);
-    }
-
-    @GetMapping("/prices/inventory")
-    public SseEmitter syncInventoryPrices() {
-        return streamTask(priceSyncService::syncInventoryPrices);
-    }
-
-    @GetMapping("/prices/library")
-    public SseEmitter syncLibraryPrices() {
-        return streamTask(priceSyncService::syncLibraryPrices);
-    }
+    
 }
