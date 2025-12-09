@@ -56,6 +56,7 @@ public class PriceSyncService {
      * @param progressCallback
      */
     private void updatePricesForIds(List<String> ids, Consumer<Integer> progressCallback) {
+        int numCardmarket = 0, numTcgplayer = 0;
         int total = ids.size();
         int count = 0;
         int processed = 0;
@@ -83,50 +84,47 @@ public class PriceSyncService {
                     continue;
                 }
                 root = root.get("pricing");
+                //System.out.println(root.toPrettyString());
 
-
-                //find pricing field (and make sure princing field has tcgplayer player field)
-                if (root == null || !root.has("tcgplayer")) {
-                    System.out.println(id + "!!!!!!!!!!!!!");
+                //find pricing field (and make sure princing field has cardmarket player field)
+                // use cardmarket because it has more cards with prices then tcgplayer from API
+                if (root == null || !root.has("cardmarket")) {
                     continue;
                 }
-                
-                JsonNode tcgPlayerNode = root.get("tcgplayer");
+                JsonNode cardmarketNode = root.get("cardmarket");
                 Double marketPrice = null;
                 
-                // loop through tcgplayer object and get the normal price (the nomal price is the first object in tcgplayer)
-                for (Map.Entry<String, JsonNode> entry : tcgPlayerNode.properties()) {
-                    
-                    String key = entry.getKey();
-                    JsonNode value = entry.getValue();
-
-                    // Skip metadata fields
-                    if (key.equals("url") || key.equals("updatedAt") || key.equals("updated") || key.equals("unit")) {
-                        continue;
-                    }
-
-                    // get marketPrice out of normal price object
-                    if (value.isObject()) {
-                        if (value.has("marketPrice") && !value.get("marketPrice").isNull()) {
-                            marketPrice = value.get("marketPrice").asDouble();
-                            break; // Stop at the first valid price we find! (only get normal price)
-                        }
-                    }
-                
-
-                    if (marketPrice != null) {
-                        savePrice(id, BigDecimal.valueOf(marketPrice));
-                        count++;
-                    }
+                // assume card is normal if comes in both variants. some cards are only holo or only normal
+                if (cardmarketNode.has("avg30") && 
+                !cardmarketNode.get("avg30").isNull() &&
+                cardmarketNode.get("avg30").asDouble() > 0) 
+                {
+                    marketPrice = cardmarketNode.get("avg30").asDouble();
+                    //convert euro to dollar
+                    savePrice(id, BigDecimal.valueOf(marketPrice * 1.16));
+                    count++;
+                // if no data from past 30 days fallback to avg
+                } else if (cardmarketNode.has("avg") && 
+                !cardmarketNode.get("avg").isNull() && 
+                cardmarketNode.get("avg").asDouble() > 0) 
+                {
+                    marketPrice = cardmarketNode.get("avg").asDouble();
+                    savePrice(id, BigDecimal.valueOf(marketPrice * 1.16));
+                    count++;
                 }
+                
+                
                 
                 //if (count % 50 == 0) Thread.sleep(200);
 
             } catch (Exception e) {
                             
-
+                System.err.println("Error syncing price for Card ID '" + id + "': " + e.getMessage());
             }
         }
+        System.out.println("TCGplayer prices found for " + numTcgplayer + " cards.");
+        System.out.println("Cardmarket prices found for " + numCardmarket + " cards.");
+
         System.out.println("Price Sync Complete. Updated " + count + " out of "+ ids.size() + "records.");
     }
 
