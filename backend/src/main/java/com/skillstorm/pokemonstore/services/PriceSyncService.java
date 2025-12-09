@@ -61,7 +61,7 @@ public class PriceSyncService {
             double percent = ((double) processed / total) * 100;
             
             // Report progress every percent
-            if (percent - lastReportedProgress > 5.0 || processed == total) {
+            if (percent - lastReportedProgress > 1.0 || processed == total) {
                 progressCallback.accept((int)percent);
                 lastReportedProgress = percent;
             }
