@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { 
-  Grid, Box, TextField, MenuItem, FormControlLabel, 
-  Switch, InputAdornment, Button, Divider 
+import {
+  Grid, Box, TextField, MenuItem, FormControlLabel,
+  Switch, InputAdornment, Button, Divider, Typography, Paper
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 
 /**
  * Mapping of backend Enum codes to user-friendly display labels.
@@ -39,12 +40,12 @@ const conditionOptions = [
  * @param {Function} props.onSubmit - Handler for Save/Add. Receives the payload object.
  * @param {Function} [props.onDelete] - Handler for Delete (Edit Mode only).
  */
-export default function InventoryItemForm({ 
-    existingItem, 
-    cardDefinition, 
-    warehouses = [], 
-    onSubmit, 
-    onDelete
+export default function InventoryItemForm({
+  existingItem,
+  cardDefinition,
+  warehouses = [],
+  onSubmit,
+  onDelete
 }) {
   const isEditMode = Boolean(existingItem);
 
@@ -69,7 +70,7 @@ export default function InventoryItemForm({
         setPrice: existingItem.setPrice || '',
         matchMarketPrice: existingItem.matchMarketPrice || false,
         markupPercentage: existingItem.markupPercentage || 0,
-        warehouseId: currentLoc?.warehouse?.id || '', 
+        warehouseId: currentLoc?.warehouse?.id || '',
         storageLocationId: currentLoc?.id || ''
       });
     } else {
@@ -132,7 +133,11 @@ export default function InventoryItemForm({
 
   const availableLocations = warehouses.find(w => w.id === formData.warehouseId)?.storageLocations || [];
   const hasPriceError = !formData.matchMarketPrice && (formData.setPrice === '' || formData.setPrice === null);
-  
+
+  const marketPrice = cardDefinition?.marketPrice || 0;
+  const markup = parseFloat(formData.markupPercentage) || 0;
+  const calculatedPrice = marketPrice * (1 + (markup / 100));
+
   return (
     <>
       <Divider sx={{ mb: 3 }}>
@@ -145,10 +150,10 @@ export default function InventoryItemForm({
             select fullWidth label="Condition" name="condition"
             value={formData.condition} onChange={handleChange} size="small"
           >
-            {conditionOptions.map(option => 
-                <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                </MenuItem>
+            {conditionOptions.map(option =>
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
             )}
           </TextField>
         </Grid>
@@ -171,7 +176,7 @@ export default function InventoryItemForm({
           <TextField
             select fullWidth label="Storage Location" name="storageLocationId"
             value={formData.storageLocationId} onChange={handleChange} size="small"
-            disabled={!formData.warehouseId} 
+            disabled={!formData.warehouseId}
           >
             {/* --- SAFETY FIX START --- */}
             {/* Always render the current value so MUI doesn't complain about "out of range".
@@ -189,32 +194,54 @@ export default function InventoryItemForm({
               </MenuItem>
             ))}
           </TextField>
-        </Grid>  
+        </Grid>
 
         {/* Pricing Strategy Section */}
         <Grid size={12}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-             <FormControlLabel
+            <FormControlLabel
               control={<Switch checked={formData.matchMarketPrice} onChange={handleChange} name="matchMarketPrice" />}
               label="Sync with Market Price"
             />
           </Box>
-          
+
           {formData.matchMarketPrice ? (
-            <TextField
-              fullWidth label="Markup Percentage" name="markupPercentage" type="number"
-              value={formData.markupPercentage} onChange={handleChange} size="small"
-              InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-              helperText="Auto-updates daily based on TCGdex"
-            />
+            <Box>
+              <TextField
+                fullWidth label="Markup Percentage" name="markupPercentage" type="number"
+                value={formData.markupPercentage} onChange={handleChange} size="small"
+                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                helperText="Auto-updates daily based on TCGdex"
+              />
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Base Market Price:</Typography>
+                  <Typography variant="body2">
+                    {marketPrice > 0 ? `$${marketPrice.toFixed(2)}` : 'Not Available'}
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', color: 'primary.main' }}>
+                    <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
+                    <Typography variant="subtitle2" fontWeight="bold">Selling Price:</Typography>
+                  </Box>
+                  <Typography variant="subtitle1" fontWeight="bold" color="primary.main">
+                    {marketPrice > 0
+                      ? `$${calculatedPrice.toFixed(2)}`
+                      : 'Run Sync First'}
+                  </Typography>
+                </Box>
+              </Paper>
+            </Box>
           ) : (
             <TextField
-              fullWidth 
-              label="Manual Price" 
-              name="setPrice" 
+              fullWidth
+              label="Manual Price"
+              name="setPrice"
               type="number"
-              value={formData.setPrice} 
-              onChange={handleChange} 
+              value={formData.setPrice}
+              onChange={handleChange}
               size="small"
               required // Visual indicator
               error={hasPriceError} // Turns red if empty
@@ -227,21 +254,21 @@ export default function InventoryItemForm({
 
       {/* Action Buttons */}
       <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-        <Button 
-          variant="contained" 
-          fullWidth 
+        <Button
+          variant="contained"
+          fullWidth
           size="large"
-          startIcon={isEditMode ? <SaveIcon /> : <AddCircleIcon />} 
+          startIcon={isEditMode ? <SaveIcon /> : <AddCircleIcon />}
           onClick={handleSubmit}
           disabled={!formData.storageLocationId || hasPriceError} // Block submit if no location
         >
           {isEditMode ? 'Save Changes' : 'Add to Inventory'}
         </Button>
         {isEditMode && (
-          <Button 
-            variant="outlined" 
-            color="error" 
-            startIcon={<DeleteIcon />} 
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteIcon />}
             onClick={() => onDelete(existingItem.id)}
           >
             Delete
