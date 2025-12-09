@@ -11,6 +11,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Service responsible for synchronizing the local database with the external TCGdex API.
@@ -119,7 +120,7 @@ public class TcgDexSyncService {
      * It iterates through every set available on TCGdex and triggers a sync for each one.
      * </p>
      */
-    public void syncAllSets() {
+    public void syncAllSets(Consumer<Integer> progressCallback) {
         System.out.println("--- Starting Full Database Sync ---");
 
         // 1. Fetch the master list of all sets
@@ -134,12 +135,22 @@ public class TcgDexSyncService {
 
         // 2. Loop through each set and sync its contents
         int count = 0;
+        double lastReportedProgress = 0;
         for (SetSummaryDto summary : allSets) {
+            count++;
+
+            double percent = ((double) count / allSets.size()) * 100;
+
+            // Report progress every percent
+            if (percent - lastReportedProgress > 1 || count == allSets.size()) {
+                progressCallback.accept((int)percent);
+                lastReportedProgress = percent;
+            }
+
             try {
                 // Sync this specific set
                 syncSingleSet(summary.id());
                 
-                count++;
                 System.out.println("Synced set " + count + "/" + allSets.size() + ": " + summary.name());
 
             } catch (Exception e) {
