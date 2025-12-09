@@ -7,6 +7,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import InfoIcon from '@mui/icons-material/Info';
 
 /**
  * Mapping of backend Enum codes to user-friendly display labels.
@@ -134,6 +135,7 @@ export default function InventoryItemForm({
   const availableLocations = warehouses.find(w => w.id === formData.warehouseId)?.storageLocations || [];
   const hasPriceError = !formData.matchMarketPrice && (formData.setPrice === '' || formData.setPrice === null);
 
+  const def = cardDefinition || existingItem?.cardDefinition;
   const marketPrice = cardDefinition?.marketPrice || 0;
   const markup = parseFloat(formData.markupPercentage) || 0;
   const calculatedPrice = marketPrice * (1 + (markup / 100));
@@ -143,7 +145,7 @@ export default function InventoryItemForm({
       <Divider sx={{ mb: 3 }}>
         {isEditMode ? 'INVENTORY SETTINGS' : 'ADD TO INVENTORY'}
       </Divider>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent={'center'}>
         {/* Condition Selection */}
         <Grid size={6}>
           <TextField
@@ -197,55 +199,63 @@ export default function InventoryItemForm({
         </Grid>
 
         {/* Pricing Strategy Section */}
-        <Grid size={12}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <FormControlLabel
+        <Grid item xs={12} >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+             <FormControlLabel
               control={<Switch checked={formData.matchMarketPrice} onChange={handleChange} name="matchMarketPrice" />}
               label="Sync with Market Price"
             />
           </Box>
+          
+          {/* ALWAYS VISIBLE MARKET DATA BOX */}
+          <Paper variant="outlined" sx={{ p: 2, mb: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
+                <InfoIcon fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="body2">Current Market Value:</Typography>
+              </Box>
+              <Typography variant="body1" fontWeight="bold">
+                {marketPrice > 0 ? `$${marketPrice.toFixed(2)}` : 'Not Available'}
+              </Typography>
+            </Box>
 
-          {formData.matchMarketPrice ? (
-            <Box>
-              <TextField
-                fullWidth label="Markup Percentage" name="markupPercentage" type="number"
-                value={formData.markupPercentage} onChange={handleChange} size="small"
-                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                helperText="Auto-updates daily based on TCGdex"
-              />
-              <Paper variant="outlined" sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">Base Market Price:</Typography>
-                  <Typography variant="body2">
-                    {marketPrice > 0 ? `$${marketPrice.toFixed(2)}` : 'Not Available'}
-                  </Typography>
-                </Box>
-
+            {/* If SYNC mode is ON, show the calculation breakdown here */}
+            {formData.matchMarketPrice && (
+              <>
+                <Divider sx={{ my: 1 }} />
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', color: 'primary.main' }}>
                     <TrendingUpIcon fontSize="small" sx={{ mr: 0.5 }} />
-                    <Typography variant="subtitle2" fontWeight="bold">Selling Price:</Typography>
+                    <Typography variant="subtitle2" fontWeight="bold">Selling Price (+{markup}%):</Typography>
                   </Box>
                   <Typography variant="subtitle1" fontWeight="bold" color="primary.main">
-                    {marketPrice > 0
-                      ? `$${calculatedPrice.toFixed(2)}`
-                      : 'Run Sync First'}
+                    {marketPrice > 0 ? `$${calculatedPrice.toFixed(2)}` : '---'}
                   </Typography>
                 </Box>
-              </Paper>
-            </Box>
+              </>
+            )}
+          </Paper>
+
+          {/* INPUT FIELDS */}
+          {formData.matchMarketPrice ? (
+            <TextField
+              fullWidth label="Markup Percentage" name="markupPercentage" type="number"
+              value={formData.markupPercentage} onChange={handleChange} size="small"
+              InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+              helperText="Updates automatically as market value changes."
+            />
           ) : (
             <TextField
-              fullWidth
-              label="Manual Price"
-              name="setPrice"
+              fullWidth 
+              label="Manual Price" 
+              name="setPrice" 
               type="number"
-              value={formData.setPrice}
-              onChange={handleChange}
+              value={formData.setPrice} 
+              onChange={handleChange} 
               size="small"
-              required // Visual indicator
-              error={hasPriceError} // Turns red if empty
-              helperText={hasPriceError ? "Price is required" : ""}
+              required 
+              error={hasPriceError} 
+              helperText={hasPriceError ? "Price is required" : "Set a fixed price (ignores market fluctuations)."}
               InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
             />
           )}
