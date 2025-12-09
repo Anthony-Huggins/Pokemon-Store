@@ -72,7 +72,6 @@ public class PriceSyncService {
                 progressCallback.accept((int)percent);
                 lastReportedProgress = percent;
             }
-
             try {
                 // 1. Fetch raw JSON
                 JsonNode root = restClient.get()
@@ -80,9 +79,16 @@ public class PriceSyncService {
                         .retrieve()
                         .body(JsonNode.class);
 
+                if (root == null || !root.has("pricing")) {
+                    continue;
+                }
+                root = root.get("pricing");
+
+
                 //find pricing field (and make sure princing field has tcgplayer player field)
                 if (root == null || !root.has("tcgplayer")) {
-                    break;
+                    System.out.println(id + "!!!!!!!!!!!!!");
+                    continue;
                 }
                 
                 JsonNode tcgPlayerNode = root.get("tcgplayer");
@@ -90,6 +96,7 @@ public class PriceSyncService {
                 
                 // loop through tcgplayer object and get the normal price (the nomal price is the first object in tcgplayer)
                 for (Map.Entry<String, JsonNode> entry : tcgPlayerNode.properties()) {
+                    
                     String key = entry.getKey();
                     JsonNode value = entry.getValue();
 
@@ -116,7 +123,8 @@ public class PriceSyncService {
                 //if (count % 50 == 0) Thread.sleep(200);
 
             } catch (Exception e) {
-                // Log quietly
+                            
+
             }
         }
         System.out.println("Price Sync Complete. Updated " + count + " out of "+ ids.size() + "records.");
