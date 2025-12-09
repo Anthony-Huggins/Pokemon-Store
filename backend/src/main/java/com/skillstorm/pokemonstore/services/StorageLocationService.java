@@ -52,6 +52,10 @@ public class StorageLocationService {
      */
     @Transactional
     public void deleteStorageLocation(Integer id) {
+        if (id == null) {
+            throw new IllegalArgumentException("Storage Location ID must be provided for deletion.");
+        }
+
         // 1. Fetch the child
         StorageLocation location = storageRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Storage Location with ID " + id + " not found."));
@@ -89,6 +93,7 @@ public class StorageLocationService {
      * @return The updated entity.
      */
     public StorageLocation updateStorageLocation(StorageLocation location) {
+
         StorageLocation existing = storageRepo.findById(location.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Location ID " + location.getId() + " not found."));
 

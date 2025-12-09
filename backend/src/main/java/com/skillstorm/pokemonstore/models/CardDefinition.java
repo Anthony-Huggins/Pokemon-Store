@@ -2,6 +2,8 @@ package com.skillstorm.pokemonstore.models;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -87,6 +89,20 @@ public class CardDefinition {
     )
     @Column(name = "type_name")
     private List<String> types = new ArrayList<>();
+
+
+    /**
+     * The current market price (USD) fetched from TCGdex/TCGPlayer.
+     * Updated via the Sync Service.
+     */
+    @Column(name = "market_price")
+    private BigDecimal marketPrice;
+
+    /**
+     * Timestamp of the last successful price sync for this card.
+     */
+    @Column(name = "last_price_update")
+    private Instant lastPriceUpdate;
 
     // --- Constructors ---
 
@@ -275,6 +291,38 @@ public class CardDefinition {
         this.types = types;
     }
 
+    /**
+     * Gets the current market price.
+     * @return
+     */
+    public BigDecimal getMarketPrice() {
+        return marketPrice;
+    }
+
+    /**
+     * Sets the current market price.
+     * @param marketPrice The market price.
+     */
+    public void setMarketPrice(BigDecimal marketPrice) {
+        this.marketPrice = marketPrice;
+    }
+
+    /**
+     * Gets the timestamp of the last price update.
+     * @return The Instant of last update.
+     */
+    public Instant getLastPriceUpdate() {
+        return lastPriceUpdate;
+    }
+
+    /**
+     * Sets the timestamp of the last price update.
+     * @param lastPriceUpdate The Instant of last update.
+     */
+    public void setLastPriceUpdate(Instant lastPriceUpdate) {
+        this.lastPriceUpdate = lastPriceUpdate;
+    }
+    
     // --- Equals and HashCode ---
 
     /**

@@ -41,6 +41,8 @@ public class InventoryItemService {
      */
     @Transactional
     public InventoryItem addItem(InventoryItem newItem) {
+
+
         // 1. Fetch the storage location to check limits
         Integer locationId = newItem.getStorageLocation().getId();
         StorageLocation location = storageRepo.findById(locationId)
@@ -120,7 +122,7 @@ public class InventoryItemService {
      * @param id The inventory item ID.
      */
     public void deleteItem(Long id) {
-        if (!inventoryRepo.existsById(id)) {
+        if ( id == null|| !inventoryRepo.existsById(id)) {
             throw new ResourceNotFoundException("Inventory Item with ID " + id + " not found.");
         }
         inventoryRepo.deleteById(id);
