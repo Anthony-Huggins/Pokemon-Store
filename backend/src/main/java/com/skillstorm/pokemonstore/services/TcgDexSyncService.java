@@ -119,6 +119,8 @@ public class TcgDexSyncService {
      * <b>WARNING:</b> This process involves hundreds of API calls and can take several minutes to complete.
      * It iterates through every set available on TCGdex and triggers a sync for each one.
      * </p>
+     * 
+     * @param progressCallback A callback function to report progress percentage (0-100).
      */
     public void syncAllSets(Consumer<Integer> progressCallback) {
         System.out.println("--- Starting Full Database Sync ---");

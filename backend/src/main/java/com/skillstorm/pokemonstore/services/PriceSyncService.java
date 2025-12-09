@@ -32,6 +32,7 @@ public class PriceSyncService {
 
     /**
      * Syncs prices for cards currently in stock.
+     * @param progressCallback
      */
     public void syncInventoryPrices(Consumer<Integer> progressCallback) {
         List<String> ids = inventoryRepo.findIdsOfCardsInStock();
@@ -40,7 +41,8 @@ public class PriceSyncService {
     }
 
     /**
-     * Syncs prices for the entire library.
+     * Syncs prices for the entire card library.
+     * @param progressCallback
      */
     public void syncLibraryPrices(Consumer<Integer> progressCallback) {
         List<String> ids = cardRepo.findAll().stream().map(CardDefinition::getId).toList();
@@ -48,6 +50,11 @@ public class PriceSyncService {
         updatePricesForIds(ids, progressCallback);
     }
 
+    /**
+     * Updates prices for a list of card IDs, reporting progress via the callback.
+     * @param ids
+     * @param progressCallback
+     */
     private void updatePricesForIds(List<String> ids, Consumer<Integer> progressCallback) {
         int total = ids.size();
         int count = 0;
@@ -117,6 +124,8 @@ public class PriceSyncService {
 
     /**
      * Updates the market price directly on the CardDefinition entity.
+     * @param cardId The card ID.
+     * @param priceValue The new market price.
      */
     @Transactional
     protected void savePrice(String cardId, BigDecimal priceValue) {
