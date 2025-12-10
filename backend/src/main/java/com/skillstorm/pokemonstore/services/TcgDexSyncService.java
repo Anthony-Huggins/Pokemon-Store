@@ -9,6 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -220,8 +226,21 @@ public class TcgDexSyncService {
 
                 if (fullCard != null) {
                     // Append extension to image path if present
-                    String fullImageUrl = (fullCard.image() != null) ? fullCard.image() + "/high.png" : null;
+                    String remoteUrl = (fullCard.image() != null) ? fullCard.image() + "/low.png" : null;
+                    // Default to saving remote image if download fails
+                    String finalStoredUrl = remoteUrl;
                     
+                    if (remoteUrl != null) {
+                        // Attempt to download and save the image locally
+                        String fileName = fullCard.id() + ".png";
+                        fileName = downloadImage(remoteUrl, fileName);
+
+                        // If successful, save the local path ("sv1-001.png") to DB
+                        if (fileName != null) {
+                            // if save seccessful, set path to local file to be saved in DB
+                            finalStoredUrl = fileName; 
+                        }
+                    }
                     // Handle potential null list for types
                     List<String> cardTypes = (fullCard.types() != null) ? fullCard.types() : new ArrayList<>();
 
@@ -230,7 +249,7 @@ public class TcgDexSyncService {
                             cardSet,
                             fullCard.localId(),
                             fullCard.name(),
-                            fullImageUrl,
+                            finalStoredUrl,
                             fullCard.category(),
                             fullCard.rarity(), // Now populated from full details
                             fullCard.hp(),     // Now populated from full details
@@ -245,5 +264,37 @@ public class TcgDexSyncService {
 
         // 4. Batch save all cards for this set
         cardRepository.saveAll(cardEntities);
+    }
+
+    /**
+     * Downloads an image from a URL and saves it locally.
+     * @param imageUrl The remote URL (TCGdex).
+     * @param filename The local filename to save as (e.g., "sv1-001.png").
+     * @return The relative path to the saved image (e.g., "/images/sv1-001.png").
+     */
+    public String downloadImage(String imageUrl, String filename) {
+        if (imageUrl == null || imageUrl.isEmpty()) return null;
+
+        final Path rootLocation = Paths.get("card_images");
+
+        try {   
+            
+            Path destination = rootLocation.resolve(filename);
+            
+            // Skip if already exists (Optimization)
+            if (Files.exists(destination)) {
+                return "/images/" + filename;
+            }
+
+            try (InputStream in = new URI(imageUrl).toURL().openStream()) {
+                Files.copy(in, destination, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            return "/images/" + filename;
+
+        } catch (Exception e) {
+            System.err.println("Failed to download image: " + imageUrl + " - " + e.getMessage());
+            return null; // Return null so we keep the old URL as fallback
+        }
     }
 }
