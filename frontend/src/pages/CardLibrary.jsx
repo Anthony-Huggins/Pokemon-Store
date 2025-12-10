@@ -83,7 +83,7 @@ export default function CardLibrary() {
       // 2. Determine Endpoint
       // If we have any active filters (keys > 0), use search. Otherwise get all.
       const hasActiveFilters = Object.keys(activeFilters).length > 0;
-      const endpoint = hasActiveFilters ? '/library/search' : '/library';
+      const endpoint =  '/library';
 
       // 3. Send Request
       const response = await api.get(endpoint, {

@@ -32,6 +32,8 @@ public class CardLibraryService {
     }
 
     /**
+     * @deprecated NO LONGER IN USE - use searchCards with no filters instead.
+     * 
      * Retrieves a paginated list of cards that have images.
      * <p>
      * Applies a default sort order: Grouped by Set ID, then by Local Card Number.
@@ -65,7 +67,8 @@ public class CardLibraryService {
      */
     public Page<CardDefinition> searchCards(String name, String cardType, String rarity, String setId, Integer hp, int page, int size) {
         // Sort by Set then ID
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
+        Sort sort = Sort.by(Sort.Order.desc("marketPrice").nullsLast());
+        Pageable pageable = PageRequest.of(page, size, sort);
         
         return cardRepo.searchCards(name, cardType, rarity, setId, hp, pageable);
     }

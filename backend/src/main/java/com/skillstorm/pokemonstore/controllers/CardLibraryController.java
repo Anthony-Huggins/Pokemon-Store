@@ -33,27 +33,7 @@ public class CardLibraryController {
         this.libraryService = libraryService;
     }
 
-    /**
-     * GET /api/v1/library
-     * Retrieves a paginated list of card definitions.
-     * <p>
-     * <b>Sorting Logic:</b>
-     * 1. {@code imageUrl}: Ascending with NULLS LAST. This ensures cards with artwork appear first.
-     * 2. {@code set.id}: Group cards by their expansion set.
-     * 3. {@code localId}: Sort numerically by the card number printed on the bottom.
-     * </p>
-     *
-     * @param page Zero-based page index (default 0).
-     * @param size The number of records per page (default 24).
-     * @return A {@link Page} of {@link CardDefinition} entities.
-     */
-    @GetMapping
-    public ResponseEntity<Page<CardDefinition>> getAllCards(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "24") int size
-    ) {
-        return ResponseEntity.ok(libraryService.getAllCards(page, size));
-    }
+
 
     /**
      * GET /api/v1/library/search
@@ -68,7 +48,7 @@ public class CardLibraryController {
      * @param size      The number of records per page (default 24).
      * @return A {@link Page} of {@link CardDefinition} entities matching the criteria.
      */
-    @GetMapping("/search")
+    @GetMapping()
     public ResponseEntity<Page<CardDefinition>> searchCards(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String cardType,
