@@ -62,7 +62,9 @@ public class PokemonstoreApplication {
             
             if (setCount == 0) {
                 System.out.println("Database is empty. Starting initial seed from TCGdex...");
-                //service.syncAllSets();
+                service.syncMissingSets(progress -> {
+                    System.out.println("Sync progress: " + progress + "%");
+                });
             } else {
                 System.out.println("Database already contains " + setCount + " sets. Skipping initial sync.");
                 // If you want to force a sync, you can delete the db file or drop tables manually
