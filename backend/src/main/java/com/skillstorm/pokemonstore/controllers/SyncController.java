@@ -31,7 +31,7 @@ public class SyncController {
 
     @GetMapping("/sets")
     public SseEmitter syncAllSets() {
-        return streamTask(cardSyncService::syncAllSets);
+        return streamTask(cardSyncService::syncMissingSets);
     }
 
     @GetMapping("/prices/inventory")

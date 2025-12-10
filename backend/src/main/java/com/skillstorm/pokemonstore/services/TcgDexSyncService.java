@@ -120,54 +120,72 @@ public class TcgDexSyncService {
     ) {}
 
     /**
-     * Master method to sync ALL sets and their cards from the API.
+     * Syncs only the sets that are missing from the local database.
      * <p>
-     * <b>WARNING:</b> This process involves hundreds of API calls and can take several minutes to complete.
-     * It iterates through every set available on TCGdex and triggers a sync for each one.
+     * This method is designed to be run periodically to ensure the database is up-to-date
+     * with new sets released by the TCGdex API. It fetches a list of all available sets and
+     * then filters out those already present in the database, syncing only the new ones.
      * </p>
-     * 
+     *
      * @param progressCallback A callback function to report progress percentage (0-100).
      */
-    public void syncAllSets(Consumer<Integer> progressCallback) {
-        System.out.println("--- Starting Full Database Sync ---");
+    public void syncMissingSets(Consumer<Integer> progressCallback) {
+        System.out.println("--- Starting Missing Sets Sync ---");
 
-        // 1. Fetch the master list of all sets
+        // 1. Fetch Master List from API
         List<SetSummaryDto> allSets = restClient.get()
                 .uri("/sets")
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<SetSummaryDto>>() {});
 
-        if (allSets == null) return;
+        if (allSets == null || allSets.isEmpty()) return;
 
-        System.out.println("Found " + allSets.size() + " sets to sync.");
-
-        // 2. Loop through each set and sync its contents
-        int count = 0;
-        double lastReportedProgress = 0;
+        // 2. Filter: Keep only sets we DO NOT have in the DB
+        // This is much faster than re-syncing everything
+        List<SetSummaryDto> missingSets = new ArrayList<>();
         for (SetSummaryDto summary : allSets) {
+            if (!setRepository.existsById(summary.id())) {
+                missingSets.add(summary);
+            }
+        }
+
+        System.out.println("Found " + missingSets.size() + " new sets to download.");
+        
+        if (missingSets.isEmpty()) {
+            progressCallback.accept(100); // Done immediately
+            return;
+        }
+
+        // 3. Sync the missing ones
+        int count = 0;
+        int lastReportedProgress = -1;
+
+        for (SetSummaryDto summary : missingSets) {
             count++;
 
-            double percent = ((double) count / allSets.size()) * 100;
+            // Calculate Progress based on the MISSING list, not the total list
+            int percent = (int) (((double) count / missingSets.size()) * 100);
 
-            // Report progress every percent
-            if (percent - lastReportedProgress > 1 || count == allSets.size()) {
-                progressCallback.accept((int)percent);
+            if (percent > lastReportedProgress) {
+                progressCallback.accept(percent);
                 lastReportedProgress = percent;
             }
 
             try {
-                // Sync this specific set
+                // Reuse your existing logic!
                 syncSingleSet(summary.id());
+                System.out.println("Synced NEW set: " + summary.name());
                 
-                System.out.println("Synced set " + count + "/" + allSets.size() + ": " + summary.name());
+                // Sleep to be polite
+                Thread.sleep(500); 
 
             } catch (Exception e) {
-                // Log error but continue to next set so one failure doesn't stop the entire process
-                System.err.println("Failed to sync set: " + summary.name() + " - " + e.getMessage());
+                System.err.println("Failed to sync set: " + summary.name());
             }
         }
-        System.out.println("--- Full Sync Complete ---");
+        System.out.println("--- Missing Sets Sync Complete ---");
     }
+    
 
     /**
      * Syncs a single set and all its associated cards by Set ID.
@@ -298,3 +316,4 @@ public class TcgDexSyncService {
         }
     }
 }
+
