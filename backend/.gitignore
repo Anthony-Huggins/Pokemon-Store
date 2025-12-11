@@ -34,3 +34,6 @@ build/
 
 ### Runtime Data ###
 card_images/
+
+### Google API keys ###
+google-credentials.json

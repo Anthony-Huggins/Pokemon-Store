@@ -11,3 +11,18 @@ spring:
         database-platform: org.hibernate.dialect.PostgreSQLDialect
         hibernate:
             ddl-auto: update
+    servlet:
+        multipart:
+            # Allows larger file uploads (standard Spring limit)
+            max-file-size: 50MB
+            max-request-size: 50MB
+
+
+server:
+  tomcat:
+    # Allows larger Base64 strings in the request body
+    max-http-form-post-size: 50MB
+    max-swallow-size: 50MB
+
+
+  

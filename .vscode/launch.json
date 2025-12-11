@@ -8,7 +8,10 @@
             "mainClass": "com.skillstorm.pokemonstore.PokemonstoreApplication",
             "projectName": "pokemonstore",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "env": {
+                "GOOGLE_APPLICATION_CREDENTIALS": "backend/google-credentials.json"
+            }
         }
     ]
 }
