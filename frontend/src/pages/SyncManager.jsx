@@ -122,8 +122,8 @@ export default function SyncManager() {
               width: '100%',
               height: '100%', minHeight: 400,
               display: 'flex', flexDirection: 'column',
-              border: '2px solid #10b981', 
-              bgcolor: 'rgba(16, 185, 129, 0.04)'
+              transition: 'transform 0.2s',
+              '&:hover': { transform: 'translateY(-5px)', boxShadow: 6 }
             }}
           >
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
@@ -165,11 +165,11 @@ export default function SyncManager() {
               <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 300, mb: 2 }}>
                 Force updates prices for all 20,000+ cards in the database. Use sparingly.
               </Typography>
-              <Chip label="Heavy Operation" color="warning" variant="outlined" />
+              <Chip label="Heavy Operation" color="warning" />
             </CardContent>
             <Box sx={{ p: 4 }}>
               <Button 
-                variant="outlined" color="warning" size="large" fullWidth startIcon={<CloudSyncIcon />}
+                variant="contained" color="warning" size="large" fullWidth startIcon={<CloudSyncIcon />}
                 disabled={activeJob !== null}
                 onClick={() => startStream('/prices/library', 'lib-price', 'Full Library Sync')}
                 sx={{ py: 1.5 }}
