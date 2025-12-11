@@ -132,7 +132,7 @@ export default function Warehouses() {
           
           {/* LEVEL 1 SUMMARY */}
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Grid container alignItems="center" justifyContent="space-between" spacing={1}>
+            <Grid container alignItems="center" justifyContent="space-between" spacing={1} sx={{ width: '100%', pr: 1 }}>
               
               {/* LEFT: Icon & Name */}
               <Grid item xs={12} sm={4}>
@@ -302,7 +302,7 @@ function LocationAccordion({ location, onEdit, onDelete }) {
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Grid container alignItems="center" justifyContent="space-between">
+        <Grid container alignItems="center" justifyContent="space-between" sx={{ width: '100%', pr: 1 }}>
           
           <Grid item xs={12} sm={4} display="flex" alignItems="center">
             <FolderIcon color="action" sx={{ mr: 2, fontSize: 24 }} />
