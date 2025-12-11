@@ -11,6 +11,7 @@ import InventoryIcon from '@mui/icons-material/Inventory2'; // Your Cards
 import StoreIcon from '@mui/icons-material/Store'; // Warehouses
 import StyleIcon from '@mui/icons-material/Style'; // Card Library
 import CloudSyncIcon from '@mui/icons-material/CloudSync'; // Sync
+import CameraAltIcon from '@mui/icons-material/CameraAlt'; // Sync
 
 const drawerWidth = 240;
 
@@ -25,6 +26,7 @@ export default function MainLayout() {
     { text: 'Stores', icon: <StoreIcon />, path: '/warehouses' },
     { text: 'Card Library', icon: <StyleIcon />, path: '/library' },
     { text: 'Sync Manager', icon: <CloudSyncIcon />, path: '/sync' },
+    { text: 'Scan Card', icon: <CameraAltIcon />, path: '/scan' },
   ];
 
   return (

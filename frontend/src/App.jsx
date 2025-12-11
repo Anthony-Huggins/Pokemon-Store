@@ -7,6 +7,7 @@ import Inventory from './pages/Inventory';
 import Warehouses from './pages/Warehouses';
 import CardLibrary from './pages/CardLibrary';
 import SyncManager from './pages/SyncManager';
+import CardScanner from './pages/CardScanner';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="warehouses" element={<Warehouses />} />
         <Route path="library" element={<CardLibrary />} />
         <Route path="sync" element={<SyncManager />} />
+        <Route path="scan" element={<CardScanner />} />
       </Route>
     </Routes>
   );
