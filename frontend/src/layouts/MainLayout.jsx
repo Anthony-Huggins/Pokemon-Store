@@ -28,7 +28,7 @@ export default function MainLayout() {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex'}}>
       <CssBaseline />
       
       {/* Top App Bar */}
