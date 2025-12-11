@@ -151,20 +151,17 @@ export default function Warehouses() {
 
               {/* CENTER: Storage Stats */}
               <Grid item xs={12} sm={5} display="flex" justifyContent={{ xs: 'flex-start', sm: 'center' }}>
-                <Chip 
-                  label={getStorageSummary(warehouse.storageLocations)} 
-                  size="small" 
-                  variant="outlined" 
-                  sx={{ borderColor: 'divider', color: 'text.secondary' }}
-                />
+                <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                   {getStorageSummary(warehouse.storageLocations)}
+                </Typography>
               </Grid>
 
               {/* RIGHT: Actions (Edit/Delete) */}
               <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
-                <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }}>
+                <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }} component="div">
                   <EditIcon fontSize="small" />
                 </IconButton>
-                <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')}>
+                <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')} component="div">
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Grid>
@@ -290,6 +287,27 @@ function LocationAccordion({ location, onEdit, onDelete }) {
     }
   };
 
+  // 2. CALCULATE CAPACITY COLOR
+  const getCapacityColor = (current, max) => {
+    if (!max) return 'text.secondary'; // Safety check
+    const ratio = current / max;
+    if (ratio >= 0.9) return 'error.main';   // Red (90%+ full)
+    if (ratio >= 0.75) return 'warning.main'; // Yellow (75%+ full)
+    return 'success.main';                   // Green (Safe)
+  };
+
+  const capacityColor = getCapacityColor(location.currentCount, location.maxCapacity);
+
+  // Helper to make "DISPLAY_CASE" -> "Display Case"
+  const formatType = (type) => {
+    if (!type) return "Unknown";
+    return type
+      .toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   return (
     <Accordion 
       expanded={expanded} 
@@ -304,6 +322,7 @@ function LocationAccordion({ location, onEdit, onDelete }) {
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Grid container alignItems="center" justifyContent="space-between" sx={{ width: '100%', pr: 1 }}>
           
+          {/* LEFT: Name & Icon */}
           <Grid item xs={12} sm={4} display="flex" alignItems="center">
             <FolderIcon color="primary" sx={{ mr: 2, fontSize: 24 }} />
             <Box>
@@ -311,15 +330,31 @@ function LocationAccordion({ location, onEdit, onDelete }) {
             </Box>
           </Grid>
 
+          {/* CENTER: Type and capacity */}
           <Grid item xs={12} sm={5}>
-            <Typography variant="body2" color="text.secondary">
-               Type: {location.type} • Capacity: {cards.length}/{location.capacity}
+            <Typography variant="body2" color="text.secondary" component="div">
+               Type: <Box component="span" fontWeight="bold" sx={{ mr: 2 }}>{formatType(location.type)}</Box>
+               
+               Capacity: 
+               <Box 
+                 component="span" 
+                 sx={{ 
+                   color: capacityColor, 
+                   fontWeight: '900', 
+                   ml: 0.5,
+                   bgcolor: 'rgba(0,0,0,0.04)', // Subtle background to make color pop
+                   px: 1, py: 0.5, borderRadius: 1
+                 }}
+               >
+                 {location.currentCount} / {location.maxCapacity}
+               </Box>
             </Typography>
           </Grid>
 
+          {/* RIGHT: Buttons */}
           <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
-            <IconButton size="small" onClick={onEdit}><EditIcon fontSize="small" /></IconButton>
-            <IconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="small" /></IconButton>
+            <IconButton size="small" onClick={onEdit} component="div"><EditIcon fontSize="small" /></IconButton>
+            <IconButton size="small" color="error" onClick={onDelete} component="div"><DeleteIcon fontSize="small" /></IconButton>
           </Grid>
 
         </Grid>
