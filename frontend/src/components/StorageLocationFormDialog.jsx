@@ -6,8 +6,8 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 
 const STORAGE_TYPES = [
-  { value: 'BINDER', label: 'Binder' },
   { value: 'DISPLAY_CASE', label: 'Display Case' },
+  { value: 'BINDER', label: 'Binder' },
   { value: 'BULK_BOX', label: 'Bulk Box' },
   { value: 'BACK_ROOM', label: 'Back Room' }
 ];
