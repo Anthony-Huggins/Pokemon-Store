@@ -14,7 +14,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 1. Define the physical path to the folder
         // Paths.get("card_images") looks for the folder at the Project Root
-        Path uploadDir = Paths.get("card_images");
+        Path uploadDir = Paths.get("backend/card_images");
         String uploadPath = uploadDir.toFile().getAbsolutePath();
 
         // 2. Map the URL "/images/**" to that physical folder
