@@ -180,10 +180,9 @@ export default function Inventory() {
       setModalOpen(false);
     } catch (error) {
       console.error("Update failed:", error);
-      setNotification({ open: true, message: "Failed to update item.", type: 'error' });
+      setNotification({ open: true, message: 'Storage location full. Please pick a diffrent one.', type: 'error' });
     }
   };
-
   /**
    * Deletes an item (DELETE /inventory/{id}).
    * Removes item from local state and refreshes warehouse counts.

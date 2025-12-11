@@ -110,7 +110,7 @@ export default function CardScanner() {
       // Use the shared close handler so it ALSO restores live mode
       handleModalClose(); 
     } catch (error) {
-       const msg = error.response?.data || 'Failed to add card.';
+       const msg = 'Storage location full. Please pick a diffrent one.';
        setNotification({ open: true, message: msg, type: 'error' });
     }
   };

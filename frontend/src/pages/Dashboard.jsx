@@ -122,7 +122,7 @@ export default function Dashboard() {
       setCardModalOpen(false);
     } catch (error) {
       console.error("Update failed:", error);
-      setNotification({ open: true, message: "Failed to update card.", type: 'error' });
+      setNotification({ open: true, message: 'Storage location full. Please pick a diffrent one.', type: 'error' });
     }
   };
 
@@ -138,6 +138,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Delete failed:", error);
       setNotification({ open: true, message: "Failed to delete card.", type: 'error' });
+      
     }
   };
 
