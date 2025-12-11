@@ -257,6 +257,7 @@ export default function Dashboard() {
           onClose={() => setModalOpen(false)}
           location={selectedItem}
           warehouseId={parentId} 
+          warehouses={warehouses}
           onSuccess={handleFormSuccess}
           onSubmit={(data) => {
              const method = data.id ? 'put' : 'post';

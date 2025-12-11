@@ -5,7 +5,6 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// 1. Define the dropdown options
 const STORAGE_TYPES = [
   { value: 'BINDER', label: 'Binder' },
   { value: 'DISPLAY_CASE', label: 'Display Case' },
@@ -13,7 +12,6 @@ const STORAGE_TYPES = [
   { value: 'BACK_ROOM', label: 'Back Room' }
 ];
 
-// 2. Define the Capacity Defaults Map
 const CAPACITY_DEFAULTS = {
   'BINDER': 200,
   'DISPLAY_CASE': 25,
@@ -22,38 +20,42 @@ const CAPACITY_DEFAULTS = {
 };
 
 export default function StorageLocationFormDialog({ 
-  open, onClose, onSubmit, onDelete, location, warehouseId 
+  open, onClose, onSubmit, onDelete, location, warehouseId, warehouses = [] 
 }) {
   
   const [formData, setFormData] = useState({ 
     name: '', 
-    maxCapacity: '', // Start blank
-    type: ''       // Start blank
+    maxCapacity: '', 
+    type: '',
+    targetWarehouseId: '' // New field to track parent warehouse
   });
 
-  // Load data or reset to blank on open
   useEffect(() => {
     if (location) {
       setFormData({ 
         name: location.name, 
         maxCapacity: location.maxCapacity, 
-        type: location.type 
+        type: location.type,
+        // If editing, use existing warehouse ID. If new, use the passed parent ID.
+        targetWarehouseId: location.warehouse?.id || warehouseId
       });
     } else {
-      // "Start out blank" for new items
-      setFormData({ name: '', maxCapacity: '', type: '' });
+      setFormData({ 
+        name: '', 
+        maxCapacity: '', 
+        type: '', 
+        targetWarehouseId: warehouseId || '' 
+      });
     }
-  }, [location, open]);
+  }, [location, warehouseId, open]);
 
-  // 3. New Handler: Sets Type AND updates Capacity automatically
   const handleTypeChange = (e) => {
     const newType = e.target.value;
     const defaultCapacity = CAPACITY_DEFAULTS[newType] || '';
-
     setFormData(prev => ({
       ...prev,
       type: newType,
-      maxCapacity: defaultCapacity // Auto-fill based on selection
+      maxCapacity: defaultCapacity 
     }));
   };
 
@@ -62,8 +64,9 @@ export default function StorageLocationFormDialog({
       name: formData.name,
       type: formData.type,
       maxCapacity: parseInt(formData.maxCapacity, 10),
+      // Use the selected warehouse from the dropdown
       warehouse: { 
-        id: location ? location.warehouse?.id : warehouseId 
+        id: formData.targetWarehouseId 
       }
     };
 
@@ -74,8 +77,7 @@ export default function StorageLocationFormDialog({
     onSubmit(payload);
   };
 
-  // Helper to check if form is valid for submission
-  const isValid = formData.name && formData.type && formData.maxCapacity;
+  const isValid = formData.name && formData.type && formData.maxCapacity && formData.targetWarehouseId;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -84,23 +86,39 @@ export default function StorageLocationFormDialog({
       </DialogTitle>
       
       <DialogContent>
+        
+        <TextField
+          select
+          margin="dense"
+          label="Store / Warehouse"
+          fullWidth
+          value={formData.targetWarehouseId}
+          onChange={(e) => setFormData({ ...formData, targetWarehouseId: e.target.value })}
+          helperText="Select which store this binder belongs to."
+        >
+          {warehouses.map((w) => (
+             <MenuItem key={w.id} value={w.id}>
+               {w.name}
+             </MenuItem>
+          ))}
+        </TextField>
+
         <TextField
           autoFocus
           margin="dense"
-          label="Name (e.g. 'Ultra Rare Binder')"
+          label="Location Name"
           fullWidth
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
 
-        {/* TYPE DROPDOWN with Auto-Fill Logic */}
         <TextField
           select
           margin="dense"
           label="Type"
           fullWidth
           value={formData.type}
-          onChange={handleTypeChange} // <--- Uses our new handler
+          onChange={handleTypeChange}
         >
           {STORAGE_TYPES.map((option) => (
             <MenuItem key={option.value} value={option.value}>
@@ -116,7 +134,7 @@ export default function StorageLocationFormDialog({
           fullWidth
           value={formData.maxCapacity}
           onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
-          helperText={formData.type ? `Default for ${formData.type.toLowerCase().replace('_', ' ')} is ${CAPACITY_DEFAULTS[formData.type]}` : "Select a type to see default"}
+          helperText={formData.type ? `Default for ${formData.type.toLowerCase().replace('_', ' ')} is ${CAPACITY_DEFAULTS[formData.type]}` : ""}
         />
       </DialogContent>
 
@@ -132,7 +150,7 @@ export default function StorageLocationFormDialog({
           <Button 
             onClick={handleSubmit} 
             variant="contained" 
-            disabled={!isValid} // Disable if fields are empty
+            disabled={!isValid}
           >
             {location ? 'Save Changes' : 'Create'}
           </Button>

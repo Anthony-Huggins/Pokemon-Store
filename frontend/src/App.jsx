@@ -4,7 +4,6 @@ import MainLayout from './layouts/MainLayout';
 // Import Pages
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
-import Warehouses from './pages/Warehouses';
 import CardLibrary from './pages/CardLibrary';
 import SyncManager from './pages/SyncManager';
 import CardScanner from './pages/CardScanner';
@@ -16,7 +15,6 @@ function App() {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="inventory" element={<Inventory />} />
-        <Route path="warehouses" element={<Warehouses />} />
         <Route path="library" element={<CardLibrary />} />
         <Route path="sync" element={<SyncManager />} />
         <Route path="scan" element={<CardScanner />} />
