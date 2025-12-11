@@ -103,7 +103,7 @@ public class CardLibraryService {
         String[] lines = scanText.split("\n");
 
         Integer detectedHp = null;
-        Pattern hpPattern = Pattern.compile("\\b\\d{3}\\b");
+        Pattern hpPattern = Pattern.compile("\\b\\d{2,3}\\b");
         // 1. EXTRACT HP using Regex (Looks for 2-3 digits in first 5 lines )
         for (int i = 0; i < 5; i++) {
             Matcher hpMatcher = hpPattern.matcher(lines[i]);
@@ -116,6 +116,11 @@ public class CardLibraryService {
 
         // search for name with extracted HP for first 5 lines.
         for (int i = 0; i < 5; i++) {
+            System.out.println("Searching for card with name: " + lines[i].trim());
+
+            if (lines[i].trim().equalsIgnoreCase("basic")){
+                continue;
+            }
 
             matches = cardRepo.searchCards(
                 lines[i].trim(),
