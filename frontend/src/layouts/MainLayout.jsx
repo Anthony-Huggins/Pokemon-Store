@@ -16,7 +16,7 @@ export default function MainLayout() {
 
   // Define menu items
   const menuItems = [
-    { text: 'Stores', icon: <StoreIcon />, path: '/' },
+    { text: 'Stores Dashboard', icon: <StoreIcon />, path: '/' },
     { text: 'Inventory', icon: <InventoryIcon />, path: '/inventory' },
     { text: 'Library', icon: <StyleIcon />, path: '/library' },
     { text: 'Sync', icon: <CloudSyncIcon />, path: '/sync' },

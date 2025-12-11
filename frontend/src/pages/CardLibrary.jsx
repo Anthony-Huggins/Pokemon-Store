@@ -160,8 +160,7 @@ export default function CardLibrary() {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-            <FilterAltIcon color="primary" sx={{ mr: 1 }} />
-            <Typography variant="h6" fontWeight="bold">Library</Typography>
+            <Typography variant="h6" fontWeight="bold"> Card Library</Typography>
           </Box>
 
           <TextField 
