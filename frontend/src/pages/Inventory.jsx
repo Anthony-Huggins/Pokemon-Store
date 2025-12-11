@@ -247,12 +247,12 @@ export default function Inventory() {
               <ListItemIcon><CalendarMonthIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Date Modified (Oldest)</ListItemText>
             </MenuItem>
-            <MenuItem onClick={() => handleSortSelect('setPrice', 'desc', 'Price (High to Low)')}>
+            <MenuItem onClick={() => handleSortSelect('effectivePrice', 'desc', 'Price (High to Low)')}>
               <ListItemIcon><AttachMoneyIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Price (High &rarr; Low)</ListItemText>
             </MenuItem>
-            
-            <MenuItem onClick={() => handleSortSelect('setPrice', 'asc', 'Price (Low to High)')}>
+
+            <MenuItem onClick={() => handleSortSelect('effectivePrice', 'asc', 'Price (Low to High)')}>
               <ListItemIcon><AttachMoneyIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Price (Low &rarr; High)</ListItemText>
             </MenuItem>

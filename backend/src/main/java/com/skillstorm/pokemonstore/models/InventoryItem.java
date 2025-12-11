@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 
+import org.hibernate.annotations.Formula;
+
 /**
  * Represents a stack of identical physical cards stored in a specific location.
  * <p>
@@ -69,6 +71,29 @@ public class InventoryItem {
      */
     @Column(name = "markup_percentage", nullable = false)
     private BigDecimal markupPercentage = BigDecimal.ZERO;
+
+    /**
+     * The effective price of this inventory item.
+     * <p>
+     * If {@code setPrice} is defined, that value is used.
+     * Otherwise, it falls back to the {@link CardDefinition}'s market price.
+     * </p>
+     */
+
+    // 1. If set_price exists, use it.
+    // 2. Else, find market_price AND apply the markup percentage formula:
+    //    price * (1 + (markup / 100))
+    @Formula("""
+        COALESCE(
+            set_price, 
+            (
+                SELECT c.market_price 
+                FROM card_definitions c 
+                WHERE c.id = card_definition_id
+            ) * (1 + (COALESCE(markup_percentage, 0) / 100.0))
+        )
+    """)
+    private BigDecimal effectivePrice;
 
     // --- Timestamps ---
 
@@ -176,6 +201,14 @@ public class InventoryItem {
      * @param markupPercentage The percentage.
      */
     public void setMarkupPercentage(BigDecimal markupPercentage) { this.markupPercentage = markupPercentage; }
+
+    /**
+     * Gets the effective price of this inventory item.
+     * @return The effective price.
+     */
+    public BigDecimal getEffectivePrice() {
+        return effectivePrice;
+    }
 
     /**
      * Lifecycle hook to automatically update the {@code updatedAt} timestamp
