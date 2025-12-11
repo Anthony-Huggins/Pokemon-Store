@@ -148,7 +148,7 @@ export default function CardLibrary() {
     } catch (error) {
       console.error("Add failed:", error);
       // Extract specific error message from backend if available
-      const msg = error.response?.data || 'Failed to add card. Is the binder full?';
+      const msg = 'Failed to add card. Is the binder full?';
       setNotification({ open: true, message: msg, type: 'error' });
     }
   };
