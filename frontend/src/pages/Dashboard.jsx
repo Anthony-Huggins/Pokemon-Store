@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Container, Typography, Box, Button, Accordion, AccordionSummary, AccordionDetails, 
-  Grid, IconButton, Chip, Divider, CircularProgress, Dialog, DialogContent, Stack, Paper
+  Grid, IconButton, CircularProgress, Dialog, DialogContent, Stack, Paper, Alert, Snackbar
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,20 +14,28 @@ import api from '../api/axiosConfig';
 import InventoryCard from '../components/InventoryCard';
 import WarehouseFormDialog from '../components/WarehouseFormDialog';
 import StorageLocationFormDialog from '../components/StorageLocationFormDialog';
+import CardDetailModal from '../components/CardDetailModal'; // Ensure this is imported
 
 /**
- * Warehouses Page
+ * Warehouses Page (Dashboard)
  * Displays a hierarchical view of Warehouses -> Storage Locations -> Cards.
  */
-export default function Warehouses() {
+export default function Dashboard() {
   const [warehouses, setWarehouses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal State
+  // --- Warehouse/Location Modal State ---
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState(null); // 'WAREHOUSE' or 'LOCATION'
-  const [selectedItem, setSelectedItem] = useState(null); // The object being edited
+  const [selectedItem, setSelectedItem] = useState(null); // The Warehouse/Location being edited
   const [parentId, setParentId] = useState(null); // If adding a location, we need the warehouse ID
+
+  // --- Card Detail Modal State ---
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(null); // The Card Item being edited
+  
+  // --- Notifications ---
+  const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchWarehouses();
@@ -49,9 +57,7 @@ export default function Warehouses() {
     if (!locations || locations.length === 0) return "Empty";
     
     const counts = locations.reduce((acc, loc) => {
-      // Clean up the type string (e.g. "GRADED_CASE" -> "Graded Case")
       const type = loc.type ? loc.type.replace('_', ' ').toLowerCase() : "unknown";
-      // Capitalize first letter
       const formattedType = type.charAt(0).toUpperCase() + type.slice(1);
       
       acc[formattedType] = (acc[formattedType] || 0) + 1;
@@ -63,10 +69,9 @@ export default function Warehouses() {
       .join(', ');
   };
 
-  // --- HANDLERS ---
-
+  // --- WAREHOUSE HANDLERS ---
   const handleEdit = (e, item, type) => {
-    e.stopPropagation(); // Prevent accordion from toggling
+    e.stopPropagation(); 
     setSelectedItem(item);
     setModalType(type);
     setModalOpen(true);
@@ -79,15 +84,17 @@ export default function Warehouses() {
     try {
       const endpoint = type === 'WAREHOUSE' ? `/warehouses/${id}` : `/locations/${id}`;
       await api.delete(endpoint);
-      fetchWarehouses(); // Refresh list
+      fetchWarehouses(); 
+      setNotification({ open: true, message: `${type} deleted successfully`, type: 'success' });
     } catch (err) {
       console.error("Delete failed", err);
+      setNotification({ open: true, message: "Delete failed", type: 'error' });
     }
   };
 
   const handleAddLocation = (e, warehouseId) => {
     e.stopPropagation();
-    setSelectedItem(null); // New item
+    setSelectedItem(null); 
     setParentId(warehouseId);
     setModalType('LOCATION');
     setModalOpen(true);
@@ -98,6 +105,42 @@ export default function Warehouses() {
     fetchWarehouses();
   };
 
+  // --- CARD HANDLERS (Matching Inventory.jsx) ---
+  const handleCardClick = (item) => {
+    setSelectedCard(item);
+    setCardModalOpen(true);
+  };
+
+  const handleSaveCard = async (updatedItem) => {
+    try {
+      await api.put('/inventory', updatedItem);
+      
+      // Refresh warehouses to update capacity counts (e.g. 13/50 -> 14/50)
+      fetchWarehouses();
+      
+      setNotification({ open: true, message: "Card updated!", type: 'success' });
+      setCardModalOpen(false);
+    } catch (error) {
+      console.error("Update failed:", error);
+      setNotification({ open: true, message: "Failed to update card.", type: 'error' });
+    }
+  };
+
+  const handleDeleteCard = async (itemId) => {
+    if (!confirm("Delete this card from inventory?")) return;
+    try {
+      await api.delete(`/inventory/${itemId}`);
+      
+      fetchWarehouses(); // Refresh counts
+      
+      setNotification({ open: true, message: "Card deleted.", type: 'success' });
+      setCardModalOpen(false);
+    } catch (error) {
+      console.error("Delete failed:", error);
+      setNotification({ open: true, message: "Failed to delete card.", type: 'error' });
+    }
+  };
+
   if (loading) return <Box p={4} textAlign="center"><CircularProgress /></Box>;
 
   return (
@@ -105,7 +148,7 @@ export default function Warehouses() {
       
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" fontWeight="bold">Warehouses</Typography>
+        <Typography variant="h4" fontWeight="bold">Stores</Typography>
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
@@ -125,16 +168,14 @@ export default function Warehouses() {
             borderRadius: 2,
             boxShadow: 2,
             border: '2px solid #293445',
-            overflow: 'hidden', // Ensures corners stay rounded when expanded
-            '&:before': { display: 'none' }, // Removes the default MUI separator line
+            overflow: 'hidden', 
+            '&:before': { display: 'none' }, 
           }} 
         >
-          
           {/* LEVEL 1 SUMMARY */}
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Grid container alignItems="center" justifyContent="space-between" spacing={1} sx={{ width: '100%', pr: 1 }}>
               
-              {/* LEFT: Icon & Name */}
               <Grid item xs={12} sm={4}>
                 <Box display="flex" alignItems="center">
                   <WarehouseIcon color="primary" sx={{ mr: 2, fontSize: 30 }} />
@@ -149,40 +190,35 @@ export default function Warehouses() {
                 </Box>
               </Grid>
 
-              {/* CENTER: Storage Stats */}
+              {/* CENTER: Storage Stats (Plain Text, No Chip) */}
               <Grid item xs={12} sm={5} display="flex" justifyContent={{ xs: 'flex-start', sm: 'center' }}>
                 <Typography variant="body2" color="text.secondary" fontWeight="medium">
                    {getStorageSummary(warehouse.storageLocations)}
                 </Typography>
               </Grid>
 
-              {/* RIGHT: Actions (Edit/Delete) */}
               <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
-                <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }} component="div">
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')} component="div">
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Box onClick={(e) => e.stopPropagation()}>
+                  <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }} component="div">
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')} component="div">
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
               </Grid>
-
             </Grid>
           </AccordionSummary>
 
-          {/* LEVEL 2: STORAGE LOCATIONS (Expanded Area) */}
+          {/* LEVEL 2: STORAGE LOCATIONS */}
           <AccordionDetails sx={{ bgcolor: '#0f172a', p: 3, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
             
-            {/* NEW LOCATION HEADER ROW */}
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
                 Storage Locations
               </Typography>
-              
-              {/* Add Location Button - Now Here! */}
               <Button 
-                variant="outlined" 
-                size="small" 
-                startIcon={<AddIcon />} 
+                variant="outlined" size="small" startIcon={<AddIcon />} 
                 onClick={(e) => handleAddLocation(e, warehouse.id)}
                 sx={{ bgcolor: 'background.paper' }}
               >
@@ -192,16 +228,8 @@ export default function Warehouses() {
 
             {(!warehouse.storageLocations || warehouse.storageLocations.length === 0) && (
               <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'transparent', border: '1px dashed #ccc' }} elevation={0}>
-                <Typography variant="body2" color="text.secondary">
-                  No storage locations created yet.
-                </Typography>
-                <Button 
-                  size="small" 
-                  sx={{ mt: 1 }} 
-                  onClick={(e) => handleAddLocation(e, warehouse.id)}
-                >
-                  Create your first container
-                </Button>
+                <Typography variant="body2" color="text.secondary">No storage locations created yet.</Typography>
+                <Button size="small" sx={{ mt: 1 }} onClick={(e) => handleAddLocation(e, warehouse.id)}>Create your first container</Button>
               </Paper>
             )}
 
@@ -212,6 +240,7 @@ export default function Warehouses() {
                   location={location} 
                   onEdit={(e) => handleEdit(e, location, 'LOCATION')}
                   onDelete={(e) => handleDelete(e, location.id, 'LOCATION')}
+                  onCardClick={handleCardClick} // <--- Pass handler down
                 />
               ))}
             </Stack>
@@ -220,7 +249,9 @@ export default function Warehouses() {
         </Accordion>
       ))}
 
-      {/* SHARED MODAL FOR FORMS */}
+      {/* --- MODALS --- */}
+
+      {/* 1. Warehouse/Location Form */}
       <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
         <DialogContent>
           {modalType === 'WAREHOUSE' ? (
@@ -229,14 +260,8 @@ export default function Warehouses() {
               onSuccess={handleFormSuccess} 
               onClose={() => setModalOpen(false)}
               onSubmit={(data) => {
-                 // Determine create vs update call here or in the Dialog?
-                 // Based on your Dialog code, it calls 'onSubmit' with payload.
-                 // We need to handle the API call here if the Dialog doesn't do it.
-                 // Let's assume the Dialog just passes data back.
                  const method = data.id ? 'put' : 'post';
                  const url = data.id ? '/warehouses' : '/warehouses'; 
-                 // Note: Usually PUT /warehouses or PUT /warehouses/{id}
-                 // Adjust based on your API. Assuming standard POST/PUT to resource root or specific ID
                  api[method](url, data).then(handleFormSuccess).catch(console.error);
               }}
               onDelete={(id) => handleDelete({ stopPropagation: ()=>{} }, id, 'WAREHOUSE')}
@@ -258,20 +283,58 @@ export default function Warehouses() {
         </DialogContent>
       </Dialog>
 
+      {/* 2. Card Detail Modal (Matching Inventory.jsx) */}
+      <CardDetailModal 
+        open={cardModalOpen}
+        onClose={() => setCardModalOpen(false)}
+        item={selectedCard}      // Use 'item' to match Inventory.jsx
+        warehouses={warehouses}  // Needed for the "Move to" dropdown
+        onSubmit={handleSaveCard}
+        onDelete={handleDeleteCard}
+      />
+
+      {/* 3. Notifications */}
+      <Snackbar open={notification.open} autoHideDuration={4000} onClose={() => setNotification({...notification, open: false})}>
+        <Alert severity={notification.type} variant="filled">
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
     </Container>
   );
 }
 
 /**
  * Nested Component for Level 2 (Storage Location)
- * Handles fetching its own cards when expanded.
  */
-function LocationAccordion({ location, onEdit, onDelete }) {
+function LocationAccordion({ location, onEdit, onDelete, onCardClick }) {
   const [expanded, setExpanded] = useState(false);
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Fetch cards ONLY when user expands this location
+  const fetchCards = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/inventory/location/${location.id}`);
+        setCards(res.data);
+      } catch (err) {
+        console.error("Failed to load cards", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  useEffect(() => {
+    if (expanded) {
+      fetchCards();
+    }
+  }, [expanded, location]);
+
+  const formatType = (type) => {
+    if (!type) return "Unknown";
+    return type.toLowerCase().split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
   const handleExpand = async (e, isExpanded) => {
     setExpanded(isExpanded);
     if (isExpanded && cards.length === 0) {
@@ -287,26 +350,16 @@ function LocationAccordion({ location, onEdit, onDelete }) {
     }
   };
 
-  // 2. CALCULATE CAPACITY COLOR
   const getCapacityColor = (current, max) => {
-    if (!max) return 'text.secondary'; // Safety check
+    if (!max) return 'text.secondary';
     const ratio = current / max;
-    if (ratio >= 0.9) return 'error.main';   // Red (90%+ full)
-    if (ratio >= 0.75) return 'warning.main'; // Yellow (75%+ full)
-    return 'success.main';                   // Green (Safe)
+    if (ratio >= 0.9) return 'error.main';
+    if (ratio >= 0.75) return 'warning.main';
+    return 'success.main';
   };
-
-  const capacityColor = getCapacityColor(location.currentCount, location.maxCapacity);
-
-  // Helper to make "DISPLAY_CASE" -> "Display Case"
-  const formatType = (type) => {
-    if (!type) return "Unknown";
-    return type
-      .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+  
+  const currentCount = location.currentCount || cards.length || 0;
+  const capacityColor = getCapacityColor(currentCount, location.maxCapacity);
 
   return (
     <Accordion 
@@ -315,52 +368,37 @@ function LocationAccordion({ location, onEdit, onDelete }) {
       sx={{ 
         '&:before': { display: 'none' },
         boxShadow: 1,
-        borderRadius: '8px !important', // Force rounded corners on child items too
-
+        borderRadius: '8px !important', 
+        border: '1px solid #293445',
+        bgcolor: '#293445' 
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
         <Grid container alignItems="center" justifyContent="space-between" sx={{ width: '100%', pr: 1 }}>
-          
-          {/* LEFT: Name & Icon */}
           <Grid item xs={12} sm={4} display="flex" alignItems="center">
-            <FolderIcon color="primary" sx={{ mr: 2, fontSize: 24 }} />
-            <Box>
-                <Typography fontWeight="bold" variant="subtitle1">{location.name}</Typography>
-            </Box>
+            <FolderIcon color="action" sx={{ mr: 2, fontSize: 24 }} />
+            <Typography fontWeight="bold" variant="subtitle1">{location.name}</Typography>
           </Grid>
 
-          {/* CENTER: Type and capacity */}
           <Grid item xs={12} sm={5}>
             <Typography variant="body2" color="text.secondary" component="div">
                Type: <Box component="span" fontWeight="bold" sx={{ mr: 2 }}>{formatType(location.type)}</Box>
-               
                Capacity: 
-               <Box 
-                 component="span" 
-                 sx={{ 
-                   color: capacityColor, 
-                   fontWeight: '900', 
-                   ml: 0.5,
-                   bgcolor: 'rgba(0,0,0,0.04)', // Subtle background to make color pop
-                   px: 1, py: 0.5, borderRadius: 1
-                 }}
-               >
-                 {location.currentCount} / {location.maxCapacity}
+               <Box component="span" sx={{ color: capacityColor, fontWeight: '900', ml: 0.5, bgcolor: 'rgba(0,0,0,0.04)', px: 1, py: 0.5, borderRadius: 1 }}>
+                 {currentCount} / {location.maxCapacity}
                </Box>
             </Typography>
           </Grid>
 
-          {/* RIGHT: Buttons */}
           <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
-            <IconButton size="small" onClick={onEdit} component="div"><EditIcon fontSize="small" /></IconButton>
-            <IconButton size="small" color="error" onClick={onDelete} component="div"><DeleteIcon fontSize="small" /></IconButton>
+            <Box onClick={(e) => e.stopPropagation()}>
+              <IconButton size="small" onClick={onEdit} component="div"><EditIcon fontSize="small" /></IconButton>
+              <IconButton size="small" color="error" onClick={onDelete} component="div"><DeleteIcon fontSize="small" /></IconButton>
+            </Box>
           </Grid>
-
         </Grid>
       </AccordionSummary>
 
-      {/* LEVEL 3: INVENTORY CARDS */}
       <AccordionDetails sx={{ p: 2 }}>
         {loading ? (
            <Box display="flex" justifyContent="center" p={2}><CircularProgress size={24} /></Box>
@@ -373,8 +411,11 @@ function LocationAccordion({ location, onEdit, onDelete }) {
             ) : (
                <Grid container spacing={2}>
                  {cards.map(item => (
-                   <Grid item key={item.id} xs={6} sm={4} md={3} lg={2}>
-                      <InventoryCard item={item} /> 
+                   <Grid key={item.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
+                      <InventoryCard 
+                        item={item} 
+                        onClick={() => onCardClick(item)} // Trigger the modal
+                      /> 
                    </Grid>
                  ))}
                </Grid>
