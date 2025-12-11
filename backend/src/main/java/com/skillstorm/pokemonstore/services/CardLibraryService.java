@@ -108,7 +108,7 @@ public class CardLibraryService {
         for (int i = 0; i < 5; i++) {
             Matcher hpMatcher = hpPattern.matcher(lines[i]);
             if (hpMatcher.find()) {
-                detectedHp = Integer.parseInt(hpMatcher.group(1));
+                detectedHp = Integer.parseInt(hpMatcher.group(0));
                 System.out.println("Detected HP: " + detectedHp);
                 break;
             }
