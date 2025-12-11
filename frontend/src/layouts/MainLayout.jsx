@@ -6,7 +6,6 @@ import {
 } from '@mui/material';
 
 // Icons
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import InventoryIcon from '@mui/icons-material/Inventory2'; // Your Cards
 import StoreIcon from '@mui/icons-material/Store'; // Warehouses
 import StyleIcon from '@mui/icons-material/Style'; // Card Library
@@ -21,9 +20,8 @@ export default function MainLayout() {
 
   // Define menu items
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+    { text: 'Stores Dashboard', icon: <StoreIcon />, path: '/' },
     { text: 'My Inventory', icon: <InventoryIcon />, path: '/inventory' },
-    { text: 'Stores', icon: <StoreIcon />, path: '/warehouses' },
     { text: 'Card Library', icon: <StyleIcon />, path: '/library' },
     { text: 'Sync Manager', icon: <CloudSyncIcon />, path: '/sync' },
     { text: 'Scan Card', icon: <CameraAltIcon />, path: '/scan' },
