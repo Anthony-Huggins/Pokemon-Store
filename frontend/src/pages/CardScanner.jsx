@@ -1,200 +1,202 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import Webcam from 'react-webcam';
 import { 
-  Box, Button, Container, Typography, Paper, Grid, CircularProgress, 
-  Snackbar, Alert 
+  Box, Button, Container, Typography, Paper, Grid, 
+  Snackbar, Alert, FormControlLabel, Switch, Stack
 } from '@mui/material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import ReplayIcon from '@mui/icons-material/Replay';
 import api from '../api/axiosConfig';
-
-// --- IMPORTS ---
 import InventoryCard from '../components/InventoryCard';
 import CardDetailModal from '../components/CardDetailModal'; 
 
 /**
- * CardScanner Page Component.
- * <p>
- * This component provides a webcam interface for users to capture images of physical Pokémon cards.
- * It handles the full workflow of:
- * 1. Capturing a webcam image.
- * 2. Sending the image to the backend for OCR processing.
- * 3. Displaying matching cards from the database.
- * 4. Allowing the user to select a match and add it to their inventory.
- * </p>
- * * @component
+ * CardScanner Page (Live Mode Edition)
+ * Allows users to capture a card image via webcam (manual or live) and find matches in the DB.
  */
 export default function CardScanner() {
-  /** Reference to the webcam component to trigger screenshots. */
   const webcamRef = useRef(null);
   
-  // --- Scanner State ---
-  /** Stores the base64 screenshot string of the captured image. Null if camera is active. */
-  const [imgSrc, setImgSrc] = useState(null);
-  /** Boolean flag indicating if the backend OCR process is currently running. */
+  // State
   const [scanning, setScanning] = useState(false);
-  /** Array of card objects returned from the backend search based on the OCR text. */
   const [matches, setMatches] = useState([]); 
+  const [isLive, setIsLive] = useState(false); 
+  
+  // New State: Remembers if we were live before opening the modal
+  const [wasLiveBeforeModal, setWasLiveBeforeModal] = useState(false);
 
-  // --- Data State ---
-  /** List of available warehouses (binders) for the 'Add to Inventory' modal dropdowns. */
+  // Data State
   const [warehouses, setWarehouses] = useState([]);
   
-  // --- Modal & Notification State ---
-  /** The specific card selected by the user to add to inventory. */
+  // Modal & Notification State
   const [selectedCard, setSelectedCard] = useState(null);
-  /** Controls visibility of the Add Inventory Modal. */
   const [modalOpen, setModalOpen] = useState(false);
-  /** Global notification state for success/error messages. */
   const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
-  /**
-   * Fetches the list of warehouses from the backend on component mount.
-   * This is required so the "Add to Inventory" modal can populate its location dropdowns.
-   */
-  const fetchWarehouses = async () => {
-    try {
-      const res = await api.get('/warehouses');
-      setWarehouses(res.data);
-    } catch (error) {
-      console.error("Failed to load warehouses:", error);
-    }
-  };
-
+  // Load Warehouses
   useEffect(() => {
-    fetchWarehouses();
+    api.get('/warehouses').then(res => setWarehouses(res.data)).catch(console.error);
   }, []);
 
-  /**
-   * Captures the current frame from the webcam.
-   * Sets the image source state and triggers the backend scan process.
-   */
-  const capture = useCallback(() => {
-    if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      setImgSrc(imageSrc);
-      handleScan(imageSrc);
-    }
-  }, [webcamRef]);
-
-  /**
-   * Sends the captured base64 image to the backend for identification.
-   * * @param {string} base64Image - The raw base64 string including the data URI prefix.
-   */
+  // --- CORE SCANNING LOGIC ---
   const handleScan = async (base64Image) => {
+    if (scanning) return; 
     setScanning(true);
-    setMatches([]);
     
     try {
-      // Remove 'data:image/jpeg;base64,' prefix before sending
       const cleanBase64 = base64Image.split(',')[1];
       const response = await api.post('/scan/identify', { image: cleanBase64 });
-      setMatches(response.data); 
+      
+      if (response.data && response.data.length > 0) {
+        setMatches(response.data);
+      }
     } catch (error) {
       console.error("Scan failed", error);
-      setNotification({ open: true, message: 'Scan failed. Please try again.', type: 'error' });
     } finally {
       setScanning(false);
     }
   };
 
-  /**
-   * Resets the scanner state to allow the user to take another photo.
-   */
-  const handleRetake = () => {
-    setImgSrc(null);
-    setMatches([]);
-  };
+  const capture = useCallback(() => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) handleScan(imageSrc);
+    }
+  }, [webcamRef, scanning]);
 
+  // --- LIVE LOOP ---
+  useEffect(() => {
+    let intervalId;
+    if (isLive) {
+      // Scan every 2.5 seconds
+      intervalId = setInterval(() => {
+        if (!scanning) capture();
+      }, 2500); 
+    }
+    return () => clearInterval(intervalId);
+  }, [isLive, scanning, capture]);
+
+  // --- HANDLERS ---
+  
   /**
-   * Opens the "Add to Inventory" modal for a specific card.
-   * @param {Object} card - The card object selected from the scan results.
+   * Pauses live scanning and opens the modal.
+   * Remembers previous state to resume later.
    */
   const handleCardClick = (card) => {
+    setWasLiveBeforeModal(isLive); // 1. Remember current state
+    setIsLive(false);              // 2. Pause scanning
     setSelectedCard(card);
     setModalOpen(true);
   };
 
   /**
-   * Submits the new inventory item to the backend.
-   * Triggered by the CardDetailModal when the user clicks "Add".
-   * * @param {Object} newItemPayload - The constructed payload containing card ID, warehouse ID, etc.
+   * Closes the modal and restores Live Mode if it was active previously.
    */
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedCard(null);
+
+    // 3. Restore state
+    if (wasLiveBeforeModal) {
+      setIsLive(true);
+    }
+    setWasLiveBeforeModal(false); // Reset memory
+  };
+
   const handleAddCard = async (newItemPayload) => {
     try {
       await api.post('/inventory', newItemPayload);
+      setNotification({ open: true, message: 'Card added!', type: 'success' });
       
-      fetchWarehouses(); // Refresh counts to keep UI in sync
-      setNotification({ open: true, message: 'Card added to Inventory!', type: 'success' });
-      setModalOpen(false);
+      // Use the shared close handler so it ALSO restores live mode
+      handleModalClose(); 
     } catch (error) {
-      console.error("Add failed:", error);
-      const msg = error.response?.data || 'Failed to add card. Is the binder full?';
-      setNotification({ open: true, message: msg, type: 'error' });
+       const msg = error.response?.data || 'Failed to add card.';
+       setNotification({ open: true, message: msg, type: 'error' });
     }
   };
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-      <Typography variant="h4" gutterBottom fontWeight="bold" align="center">
+      <Typography variant="h4" fontWeight="bold" gutterBottom align="center">
         Card Scanner
       </Typography>
 
-      {/* SECTION 1: CAMERA AREA */}
+      {/* CAMERA SECTION */}
       <Grid container justifyContent="center" sx={{ mb: 4 }}>
         <Grid item xs={12} md={8} lg={6}>
           <Paper elevation={3} sx={{ p: 2, bgcolor: '#000', textAlign: 'center', borderRadius: 2 }}>
+            
+            {/* Viewport */}
             <Box sx={{ 
-              height: 400, 
-              bgcolor: '#222', 
-              display: 'flex', justifyContent: 'center', alignItems: 'center', 
-              overflow: 'hidden', borderRadius: 1, mb: 2
+              height: 400, bgcolor: '#222', borderRadius: 1, mb: 2,
+              display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
+              position: 'relative'
             }}>
-              {!imgSrc ? (
-                <Webcam
+               <Webcam
                   audio={false}
                   ref={webcamRef}
                   screenshotFormat="image/jpeg"
                   height="100%" 
                   style={{ objectFit: 'contain' }}
                 />
-              ) : (
-                <img src={imgSrc} alt="captured" style={{ height: '100%', objectFit: 'contain' }} />
-              )}
+                
+                {/* Live Indicator Overlay */}
+                {isLive && (
+                  <Box sx={{ 
+                    position: 'absolute', top: 10, right: 10, 
+                    bgcolor: 'rgba(255, 0, 0, 0.7)', color: 'white', 
+                    px: 1, py: 0.5, borderRadius: 1, fontSize: '0.75rem', fontWeight: 'bold'
+                  }}>
+                    LIVE {scanning ? "..." : ""}
+                  </Box>
+                )}
             </Box>
+            
+            {/* CONTROLS ROW */}
+            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center">
+              
+              {/* Capture Button */}
+              <Button 
+                variant="contained" 
+                size="large" 
+                onClick={capture} 
+                startIcon={<CameraAltIcon />}
+                disabled={isLive || scanning} 
+                sx={{ minWidth: 200 }}
+              >
+                {isLive ? "Scanning..." : "Capture Photo"}
+              </Button>
 
-            {!imgSrc ? (
-              <Button 
-                variant="contained" size="large" fullWidth 
-                onClick={capture} startIcon={<CameraAltIcon />}
-              >
-                Capture Photo
-              </Button>
-            ) : (
-              <Button 
-                variant="outlined" size="large" fullWidth 
-                onClick={handleRetake} startIcon={<ReplayIcon />} 
-                sx={{ color: 'white', borderColor: 'white', '&:hover': { borderColor: '#ccc' } }}
-              >
-                Scan Another
-              </Button>
-            )}
+              {/* Live Toggle */}
+              <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, px: 2, py: 0.5 }}>
+                <FormControlLabel
+                  control={
+                    <Switch 
+                      checked={isLive} 
+                      onChange={() => { setIsLive(!isLive); setMatches([]); }} 
+                      color="error" 
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" color="white" fontWeight="bold">
+                      Live Mode
+                    </Typography>
+                  }
+                  sx={{ mr: 0 }} 
+                />
+              </Box>
+
+            </Stack>
+
           </Paper>
         </Grid>
       </Grid>
 
-      {/* SECTION 2: RESULTS AREA */}
-      {scanning && (
-        <Box display="flex" flexDirection="column" alignItems="center" my={4}>
-          <CircularProgress size={40} />
-          <Typography variant="h6" sx={{ mt: 2 }}>Identifying Card...</Typography>
-        </Box>
-      )}
-
-      {!scanning && matches.length > 0 && (
+      {/* RESULTS SECTION */}
+      {matches.length > 0 && (
         <Box>
            <Typography variant="h5" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-             Scan Results ({matches.length})
+             Matches Found ({matches.length})
            </Typography>
            
            <Grid container spacing={2}>
@@ -210,17 +212,10 @@ export default function CardScanner() {
         </Box>
       )}
 
-      {!scanning && imgSrc && matches.length === 0 && (
-         <Box textAlign="center" mt={4}>
-            <Typography variant="h6" color="text.secondary">No matching cards found.</Typography>
-            <Typography variant="body2" color="text.secondary">Try ensuring the card name and HP are clearly visible.</Typography>
-         </Box>
-      )}
-
-      {/* SECTION 3: MODAL & NOTIFICATIONS */}
+      {/* MODAL & TOASTS */}
       <CardDetailModal 
         open={modalOpen} 
-        onClose={() => setModalOpen(false)} 
+        onClose={handleModalClose} // Now uses the smart handler
         card={selectedCard} 
         warehouses={warehouses}
         onSubmit={handleAddCard} 
