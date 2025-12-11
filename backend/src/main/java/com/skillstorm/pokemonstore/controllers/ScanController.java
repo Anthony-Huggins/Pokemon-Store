@@ -35,12 +35,14 @@ public class ScanController {
 
             // 1. Get Text from Google
             String detectedText = ocrService.detectText(base64Image);
-            System.out.println("--- OCR RESULT ---\n" + detectedText);
-
-            // 2. TODO: Match against DB (We will do this next)
             
-            // Return empty list for now just to confirm flow works
-            return ResponseEntity.ok(List.of());
+            // 2. Find Matches using our new Service
+            List<CardDefinition> matches = libraryService.findMatchesFromScan(detectedText);
+            
+            System.out.println("Found " + matches.size() + " matches in DB.");
+
+            return ResponseEntity.ok(matches);
+
 
         } catch (Exception e) {
             e.printStackTrace();

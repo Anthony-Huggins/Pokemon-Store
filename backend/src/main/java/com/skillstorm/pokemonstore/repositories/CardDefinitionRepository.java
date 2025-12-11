@@ -23,6 +23,8 @@ import org.springframework.stereotype.Repository;
 public interface CardDefinitionRepository extends JpaRepository<CardDefinition, String> {
 
     /**
+     * @deprecated just use searchCards() instead
+     *
      * Finds all cards that actually have an image URL.
      * This filters out placeholder entries or cards with missing art.
      *
