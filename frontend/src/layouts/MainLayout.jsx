@@ -1,18 +1,14 @@
-import { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { 
-  Box, Drawer, AppBar, Toolbar, List, Typography, Divider, 
-  ListItem, ListItemButton, ListItemIcon, ListItemText, CssBaseline 
+  Box, AppBar, Toolbar, Typography, Button, CssBaseline 
 } from '@mui/material';
 
 // Icons
-import InventoryIcon from '@mui/icons-material/Inventory2'; // Your Cards
-import StoreIcon from '@mui/icons-material/Store'; // Warehouses
-import StyleIcon from '@mui/icons-material/Style'; // Card Library
-import CloudSyncIcon from '@mui/icons-material/CloudSync'; // Sync
-import CameraAltIcon from '@mui/icons-material/CameraAlt'; // Sync
-
-const drawerWidth = 240;
+import InventoryIcon from '@mui/icons-material/Inventory2'; 
+import StoreIcon from '@mui/icons-material/Store'; 
+import StyleIcon from '@mui/icons-material/Style'; 
+import CloudSyncIcon from '@mui/icons-material/CloudSync'; 
+import CameraAltIcon from '@mui/icons-material/CameraAlt'; 
 
 export default function MainLayout() {
   const navigate = useNavigate();
@@ -20,60 +16,66 @@ export default function MainLayout() {
 
   // Define menu items
   const menuItems = [
-    { text: 'Stores Dashboard', icon: <StoreIcon />, path: '/' },
-    { text: 'My Inventory', icon: <InventoryIcon />, path: '/inventory' },
-    { text: 'Card Library', icon: <StyleIcon />, path: '/library' },
-    { text: 'Sync Manager', icon: <CloudSyncIcon />, path: '/sync' },
-    { text: 'Scan Card', icon: <CameraAltIcon />, path: '/scan' },
+    { text: 'Stores', icon: <StoreIcon />, path: '/' },
+    { text: 'Inventory', icon: <InventoryIcon />, path: '/inventory' },
+    { text: 'Library', icon: <StyleIcon />, path: '/library' },
+    { text: 'Sync', icon: <CloudSyncIcon />, path: '/sync' },
+    { text: 'Scan', icon: <CameraAltIcon />, path: '/scan' },
   ];
 
   return (
-    <Box sx={{ display: 'flex'}}>
+    // Switch to column layout so content sits below the header
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <CssBaseline />
       
       {/* Top App Bar */}
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+      <AppBar position="fixed">
         <Toolbar>
-          <Typography variant="h6" noWrap component="div">
+          {/* Logo / Title */}
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ mr: 4, fontWeight: 'bold', cursor: 'pointer' }}
+            onClick={() => navigate('/')}
+          >
             Pokémon Inventory Admin
           </Typography>
+
+          {/* Horizontal Navigation Links */}
+          <Box sx={{ display: 'flex', flexGrow: 1, gap: 1 }}>
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.text}
+                  onClick={() => navigate(item.path)}
+                  startIcon={item.icon}
+                  sx={{ 
+                    color: 'white',
+                    px: 2,
+                    textTransform: 'none',
+                    fontWeight: isActive ? 'bold' : 'normal',
+                    bgcolor: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    borderBottom: isActive ? '3px solid white' : '3px solid transparent',
+                    borderRadius: 0, // Squared look for nav tabs
+                    '&:hover': { 
+                      bgcolor: 'rgba(255,255,255,0.08)',
+                      borderBottom: '3px solid rgba(255,255,255,0.5)'
+                    }
+                  }}
+                >
+                  {item.text}
+                </Button>
+              );
+            })}
+          </Box>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar (Drawer) */}
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar /> {/* Spacer to push content down below AppBar */}
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {menuItems.map((item) => (
-              <ListItem key={item.text} disablePadding>
-                <ListItemButton 
-                  selected={location.pathname === item.path}
-                  onClick={() => navigate(item.path)}
-                >
-                  <ListItemIcon sx={{ color: location.pathname === item.path ? 'primary.main' : 'inherit' }}>
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Divider />
-        </Box>
-      </Drawer>
-
       {/* Main Content Area */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar /> {/* Spacer to push content down below AppBar */}
-        {/* The <Outlet /> renders the current page based on the URL */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3, width: '100%' }}>
+        <Toolbar /> {/* Spacer to prevent content hiding behind fixed AppBar */}
         <Outlet /> 
       </Box>
     </Box>
