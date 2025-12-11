@@ -305,7 +305,7 @@ function LocationAccordion({ location, onEdit, onDelete }) {
         <Grid container alignItems="center" justifyContent="space-between" sx={{ width: '100%', pr: 1 }}>
           
           <Grid item xs={12} sm={4} display="flex" alignItems="center">
-            <FolderIcon color="action" sx={{ mr: 2, fontSize: 24 }} />
+            <FolderIcon color="primary" sx={{ mr: 2, fontSize: 24 }} />
             <Box>
                 <Typography fontWeight="bold" variant="subtitle1">{location.name}</Typography>
             </Box>
