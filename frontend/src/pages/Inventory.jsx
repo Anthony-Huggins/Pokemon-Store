@@ -257,12 +257,12 @@ export default function Inventory() {
               <ListItemText>Price (Low &rarr; High)</ListItemText>
             </MenuItem>
             
-            <MenuItem onClick={() => handleSortSelect('cardDefinition.name', 'asc', 'Name (A to Z)')}>
+            <MenuItem onClick={() => handleSortSelect('cardName', 'asc', 'Name (A to Z)')}>
               <ListItemIcon><SortByAlphaIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Name (A &rarr; Z)</ListItemText>
             </MenuItem>
-            
-            <MenuItem onClick={() => handleSortSelect('cardDefinition.name', 'desc', 'Name (Z to A)')}>
+
+            <MenuItem onClick={() => handleSortSelect('cardName', 'desc', 'Name (Z to A)')}>
               <ListItemIcon><SortByAlphaIcon fontSize="small" /></ListItemIcon>
               <ListItemText>Name (Z &rarr; A)</ListItemText>
             </MenuItem>

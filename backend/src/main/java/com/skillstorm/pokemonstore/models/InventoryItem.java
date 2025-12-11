@@ -48,7 +48,11 @@ public class InventoryItem {
     @Column(nullable = false)
     private CardCondition condition;
 
-
+    /**
+     * The name of the card (denormalized for easy access).
+     */
+    @Formula("(SELECT c.name FROM card_definitions c WHERE c.id = card_definition_id)")
+    private String cardName;
 
     // --- Pricing Fields ---
 
@@ -208,6 +212,14 @@ public class InventoryItem {
      */
     public BigDecimal getEffectivePrice() {
         return effectivePrice;
+    }
+
+    /**
+     * Gets the card name.
+     * @return The card name string.
+     */
+    public String getCardName() {
+        return cardName;
     }
 
     /**
