@@ -7,6 +7,8 @@ import {
   Typography 
 } from '@mui/material';
 
+const LOCAL_IMAGE_BASE = 'http://localhost:8080/images/';
+
 /**
  * A universal card component that displays either an Inventory Item or a generic Card Definition.
  * <p>
@@ -30,6 +32,8 @@ export default function InventoryCard({ item, card, onClick }) {
 
   if (!cardDef) return null;
 
+  const imageURL = "http://localhost:8080/images/" + cardDef.id + ".png";
+
   return (
     <Card 
       sx={{ 
@@ -51,7 +55,7 @@ export default function InventoryCard({ item, card, onClick }) {
         <Box sx={{ position: 'relative', pt: '140%' /* Aspect Ratio for Pokemon Cards */ }}>
           <CardMedia
             component="img"
-            image={cardDef.imageUrl}
+            image= {imageURL} 
             alt={cardDef.name}
             sx={{
               position: 'absolute',

@@ -34,8 +34,10 @@ export default function CardDetailModal({ open, onClose, item, card, warehouses 
   // If editing an item, grab its definition. If browsing library, use the card directly.
   const cardDef = item ? item.cardDefinition : card;
 
+
   if (!cardDef) return null;
 
+  const imageURL = "http://localhost:8080/images/" + cardDef.id + ".png";
   return (
     <Dialog 
       open={open} 
@@ -67,7 +69,7 @@ export default function CardDetailModal({ open, onClose, item, card, warehouses 
           <Grid size={{ xs: 12, md: 5 }} sx={{ bgcolor: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
             <Box 
               component="img"
-              src={cardDef.imageUrl} 
+              src={imageURL} 
               alt={cardDef.name}
               sx={{ 
                 width: '100%', 
