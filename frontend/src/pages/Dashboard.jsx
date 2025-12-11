@@ -152,152 +152,134 @@ export default function Dashboard() {
         <Button 
           variant="contained" 
           startIcon={<AddIcon />}
-          onClick={() => { setSelectedItem(null); setModalType('WAREHOUSE'); setModalOpen(true); }}
+          onClick={() => { 
+            setSelectedItem(null); 
+            setModalType('WAREHOUSE'); // 1. Set Type
+            setModalOpen(true);        // 2. Open
+          }}
         >
           New Warehouse
         </Button>
       </Box>
 
-      {/* LEVEL 1: WAREHOUSES */}
+      {/* LEVEL 1: WAREHOUSES ACCORDION LIST */}
       {warehouses.map((warehouse) => (
         <Accordion 
           key={warehouse.id} 
           disableGutters
-          sx={{ 
-            mb: 2, 
-            borderRadius: 2,
-            boxShadow: 2,
-            border: '2px solid #293445',
-            overflow: 'hidden', 
-            '&:before': { display: 'none' }, 
-          }} 
+          sx={{ mb: 2, borderRadius: 2, boxShadow: 2, border: '2px solid #293445', overflow: 'hidden', '&:before': { display: 'none' }}} 
         >
-          {/* LEVEL 1 SUMMARY */}
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Grid container alignItems="center" justifyContent="space-between" spacing={1} sx={{ width: '100%', pr: 1 }}>
-              
-              <Grid item xs={12} sm={4}>
-                <Box display="flex" alignItems="center">
-                  <WarehouseIcon color="primary" sx={{ mr: 2, fontSize: 30 }} />
-                  <Box>
-                    <Typography variant="h6" fontWeight="bold" lineHeight={1.2}>
-                      {warehouse.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {warehouse.location}
-                    </Typography>
+           {/* ... Accordion Content (Summary, Details, LocationAccordion) ... */}
+           {/* (This part of your code was fine, no changes needed here) */}
+           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Grid container alignItems="center" justifyContent="space-between" spacing={1} sx={{ width: '100%', pr: 1 }}>
+                <Grid item xs={12} sm={4}>
+                  <Box display="flex" alignItems="center">
+                    <WarehouseIcon color="primary" sx={{ mr: 2, fontSize: 30 }} />
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold" lineHeight={1.2}>{warehouse.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">{warehouse.location}</Typography>
+                    </Box>
                   </Box>
-                </Box>
+                </Grid>
+                <Grid item xs={12} sm={5} display="flex" justifyContent={{ xs: 'flex-start', sm: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" fontWeight="medium">
+                     {getStorageSummary(warehouse.storageLocations)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
+                  <Box onClick={(e) => e.stopPropagation()}>
+                    <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }} component="div">
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')} component="div">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                </Grid>
               </Grid>
+           </AccordionSummary>
 
-              {/* CENTER: Storage Stats (Plain Text, No Chip) */}
-              <Grid item xs={12} sm={5} display="flex" justifyContent={{ xs: 'flex-start', sm: 'center' }}>
-                <Typography variant="body2" color="text.secondary" fontWeight="medium">
-                   {getStorageSummary(warehouse.storageLocations)}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12} sm={3} display="flex" justifyContent="flex-end">
-                <Box onClick={(e) => e.stopPropagation()}>
-                  <IconButton size="small" onClick={(e) => handleEdit(e, warehouse, 'WAREHOUSE')} sx={{ mr: 1 }} component="div">
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" color="error" onClick={(e) => handleDelete(e, warehouse.id, 'WAREHOUSE')} component="div">
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Grid>
-            </Grid>
-          </AccordionSummary>
-
-          {/* LEVEL 2: STORAGE LOCATIONS */}
-          <AccordionDetails sx={{ bgcolor: '#0f172a', p: 3, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-            
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                Storage Locations
-              </Typography>
-              <Button 
-                variant="outlined" size="small" startIcon={<AddIcon />} 
-                onClick={(e) => handleAddLocation(e, warehouse.id)}
-                sx={{ bgcolor: 'background.paper' }}
-              >
-                Add Location
-              </Button>
-            </Box>
-
-            {(!warehouse.storageLocations || warehouse.storageLocations.length === 0) && (
-              <Paper sx={{ p: 4, textAlign: 'center', bgcolor: 'transparent', border: '1px dashed #ccc' }} elevation={0}>
-                <Typography variant="body2" color="text.secondary">No storage locations created yet.</Typography>
-                <Button size="small" sx={{ mt: 1 }} onClick={(e) => handleAddLocation(e, warehouse.id)}>Create your first container</Button>
-              </Paper>
-            )}
-
-            <Stack spacing={1}>
-              {warehouse.storageLocations?.map((location) => (
-                <LocationAccordion 
-                  key={location.id} 
-                  location={location} 
-                  onEdit={(e) => handleEdit(e, location, 'LOCATION')}
-                  onDelete={(e) => handleDelete(e, location.id, 'LOCATION')}
-                  onCardClick={handleCardClick} // <--- Pass handler down
-                />
-              ))}
-            </Stack>
-
-          </AccordionDetails>
+           <AccordionDetails sx={{ bgcolor: '#0f172a', p: 3, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+               <Typography variant="subtitle2" fontWeight="bold" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                 Storage Locations
+               </Typography>
+               <Button 
+                 variant="outlined" size="small" startIcon={<AddIcon />} 
+                 onClick={(e) => handleAddLocation(e, warehouse.id)}
+                 sx={{ bgcolor: 'background.paper' }}
+               >
+                 Add Location
+               </Button>
+             </Box>
+             
+             {/* ... Storage Locations List ... */}
+             <Stack spacing={1}>
+                {warehouse.storageLocations?.map((location) => (
+                  <LocationAccordion 
+                    key={location.id} 
+                    location={location} 
+                    onEdit={(e) => handleEdit(e, location, 'LOCATION')}
+                    onDelete={(e) => handleDelete(e, location.id, 'LOCATION')}
+                    onCardClick={handleCardClick}
+                  />
+                ))}
+             </Stack>
+           </AccordionDetails>
         </Accordion>
       ))}
 
-      {/* --- MODALS --- */}
+      {/* --- MODALS SECTION (FIXED) --- */}
 
-      {/* 1. Warehouse/Location Form */}
-      <Dialog open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="sm" fullWidth>
-        <DialogContent>
-          {modalType === 'WAREHOUSE' ? (
-            <WarehouseFormDialog 
-              warehouse={selectedItem} 
-              onSuccess={handleFormSuccess} 
-              onClose={() => setModalOpen(false)}
-              onSubmit={(data) => {
-                 const method = data.id ? 'put' : 'post';
-                 const url = data.id ? '/warehouses' : '/warehouses'; 
-                 api[method](url, data).then(handleFormSuccess).catch(console.error);
-              }}
-              onDelete={(id) => handleDelete({ stopPropagation: ()=>{} }, id, 'WAREHOUSE')}
-            />
-          ) : (
-            <StorageLocationFormDialog 
-              location={selectedItem}
-              warehouseId={parentId} 
-              onSuccess={handleFormSuccess}
-              onClose={() => setModalOpen(false)}
-              onSubmit={(data) => {
-                 const method = data.id ? 'put' : 'post';
-                 const url = data.id ? '/locations' : '/locations';
-                 api[method](url, data).then(handleFormSuccess).catch(console.error);
-              }}
-              onDelete={(id) => handleDelete({ stopPropagation: ()=>{} }, id, 'LOCATION')}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* 1. Warehouse Form Dialog */}
+      {/* We render this DIRECTLY, not inside another <Dialog> */}
+      {modalType === 'WAREHOUSE' && (
+        <WarehouseFormDialog 
+          open={modalOpen} 
+          onClose={() => setModalOpen(false)}
+          warehouse={selectedItem}
+          // Match the props you used in Warehouses.jsx
+          onSubmit={(data) => {
+             const method = data.id ? 'put' : 'post';
+             const url = data.id ? '/warehouses' : '/warehouses'; 
+             api[method](url, data).then(handleFormSuccess).catch(console.error);
+          }}
+          onDelete={(id) => handleDelete({ stopPropagation: ()=>{} }, id, 'WAREHOUSE')}
+        />
+      )}
 
-      {/* 2. Card Detail Modal (Matching Inventory.jsx) */}
+      {/* 2. Storage Location Form Dialog */}
+      {/* Also rendered DIRECTLY */}
+      {modalType === 'LOCATION' && (
+        <StorageLocationFormDialog 
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          location={selectedItem}
+          warehouseId={parentId} 
+          onSuccess={handleFormSuccess}
+          onSubmit={(data) => {
+             const method = data.id ? 'put' : 'post';
+             const url = data.id ? '/locations' : '/locations';
+             api[method](url, data).then(handleFormSuccess).catch(console.error);
+          }}
+          onDelete={(id) => handleDelete({ stopPropagation: ()=>{} }, id, 'LOCATION')}
+        />
+      )}
+
+      {/* 3. Card Detail Modal */}
       <CardDetailModal 
         open={cardModalOpen}
         onClose={() => setCardModalOpen(false)}
-        item={selectedCard}      // Use 'item' to match Inventory.jsx
-        warehouses={warehouses}  // Needed for the "Move to" dropdown
+        item={selectedCard}
+        warehouses={warehouses}
         onSubmit={handleSaveCard}
         onDelete={handleDeleteCard}
       />
 
-      {/* 3. Notifications */}
+      {/* 4. Notifications */}
       <Snackbar open={notification.open} autoHideDuration={4000} onClose={() => setNotification({...notification, open: false})}>
-        <Alert severity={notification.type} variant="filled">
-          {notification.message}
-        </Alert>
+        <Alert severity={notification.type} variant="filled">{notification.message}</Alert>
       </Snackbar>
 
     </Container>

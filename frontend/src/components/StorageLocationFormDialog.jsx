@@ -5,99 +5,102 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
-// Standard types for your storage containers
+// 1. Define the dropdown options
 const STORAGE_TYPES = [
   { value: 'BINDER', label: 'Binder' },
-  { value: 'BOX', label: 'Storage Box' },
-  { value: 'TIN', label: 'Tin' },
-  { value: 'GRADED_CASE', label: 'Graded Slab Case' },
-  { value: 'OTHER', label: 'Other' }
+  { value: 'DISPLAY_CASE', label: 'Display Case' },
+  { value: 'BULK_BOX', label: 'Bulk Box' },
+  { value: 'BACK_ROOM', label: 'Back Room' }
 ];
 
-/**
- * Modal to Create or Edit a StorageLocation entity.
- *
- * @component
- * @param {Object} props
- * @param {boolean} props.open - Visibility state.
- * @param {Function} props.onClose - Close handler.
- * @param {Function} props.onSubmit - Save handler.
- * @param {Function} props.onDelete - Delete handler.
- * @param {Object} [props.location] - The location object to edit (null for create).
- * @param {number} [props.warehouseId] - The ID of the parent warehouse (required for create).
- */
+// 2. Define the Capacity Defaults Map
+const CAPACITY_DEFAULTS = {
+  'BINDER': 200,
+  'DISPLAY_CASE': 25,
+  'BULK_BOX': 1000,
+  'BACK_ROOM': 10000
+};
+
 export default function StorageLocationFormDialog({ 
   open, onClose, onSubmit, onDelete, location, warehouseId 
 }) {
   
-  // Default State
   const [formData, setFormData] = useState({ 
     name: '', 
-    capacity: 60, 
-    type: 'BINDER' 
+    maxCapacity: '', // Start blank
+    type: ''       // Start blank
   });
 
-  // Load data into form when opening for Edit
+  // Load data or reset to blank on open
   useEffect(() => {
     if (location) {
       setFormData({ 
         name: location.name, 
-        capacity: location.capacity || 60, 
-        type: location.type || 'BINDER' 
+        maxCapacity: location.maxCapacity, 
+        type: location.type 
       });
     } else {
-      // Reset for "Add New"
-      setFormData({ name: '', capacity: 60, type: 'BINDER' });
+      // "Start out blank" for new items
+      setFormData({ name: '', maxCapacity: '', type: '' });
     }
   }, [location, open]);
 
+  // 3. New Handler: Sets Type AND updates Capacity automatically
+  const handleTypeChange = (e) => {
+    const newType = e.target.value;
+    const defaultCapacity = CAPACITY_DEFAULTS[newType] || '';
+
+    setFormData(prev => ({
+      ...prev,
+      type: newType,
+      maxCapacity: defaultCapacity // Auto-fill based on selection
+    }));
+  };
+
   const handleSubmit = () => {
-    // 1. Construct the payload
     const payload = {
-      ...formData,
-      // Ensure capacity is a number
-      capacity: parseInt(formData.capacity, 10) 
+      name: formData.name,
+      type: formData.type,
+      maxCapacity: parseInt(formData.maxCapacity, 10),
+      warehouse: { 
+        id: location ? location.warehouse?.id : warehouseId 
+      }
     };
 
-    // 2. Add ID context
     if (location) {
-      // EDIT MODE: Include existing ID
       payload.id = location.id;
-      // Keep original warehouseId if backend needs it, otherwise just send changes
-      payload.warehouseId = location.warehouseId; 
-    } else {
-      // CREATE MODE: Attach the parent Warehouse ID
-      payload.warehouseId = warehouseId;
     }
 
     onSubmit(payload);
   };
 
+  // Helper to check if form is valid for submission
+  const isValid = formData.name && formData.type && formData.maxCapacity;
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {location ? 'Edit Storage Location' : 'Add New Location'}
+        {location ? 'Edit Location' : 'Add New Location'}
       </DialogTitle>
       
       <DialogContent>
-        {/* NAME FIELD */}
         <TextField
           autoFocus
           margin="dense"
-          label="Location Name (e.g., 'Binder 1')"
+          label="Name (e.g. 'Ultra Rare Binder')"
           fullWidth
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
 
-        {/* TYPE DROPDOWN */}
+        {/* TYPE DROPDOWN with Auto-Fill Logic */}
         <TextField
           select
           margin="dense"
-          label="Storage Type"
+          label="Type"
           fullWidth
           value={formData.type}
-          onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+          onChange={handleTypeChange} // <--- Uses our new handler
         >
           {STORAGE_TYPES.map((option) => (
             <MenuItem key={option.value} value={option.value}>
@@ -106,40 +109,30 @@ export default function StorageLocationFormDialog({
           ))}
         </TextField>
 
-        {/* CAPACITY FIELD */}
         <TextField
           margin="dense"
-          label="Max Capacity (Cards)"
+          label="Max Capacity"
           type="number"
           fullWidth
-          value={formData.capacity}
-          onChange={(e) => setFormData({ ...formData, capacity: e.target.value })}
-          helperText="Used to calculate how full this container is."
+          value={formData.maxCapacity}
+          onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
+          helperText={formData.type ? `Default for ${formData.type.toLowerCase().replace('_', ' ')} is ${CAPACITY_DEFAULTS[formData.type]}` : "Select a type to see default"}
         />
       </DialogContent>
 
       <DialogActions sx={{ justifyContent: 'space-between', p: 3 }}>
-        
-        {/* LEFT: Delete Button (Edit Mode Only) */}
         {location ? (
-          <Button 
-            onClick={() => onDelete(location.id)} 
-            color="error" 
-            startIcon={<DeleteIcon />}
-          >
-            Delete Location
+          <Button onClick={() => onDelete(location.id)} color="error" startIcon={<DeleteIcon />}>
+            Delete
           </Button>
-        ) : (
-          <Box /> // Spacer
-        )}
+        ) : <Box />}
 
-        {/* RIGHT: Cancel & Save */}
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button 
             onClick={handleSubmit} 
             variant="contained" 
-            disabled={!formData.name}
+            disabled={!isValid} // Disable if fields are empty
           >
             {location ? 'Save Changes' : 'Create'}
           </Button>
