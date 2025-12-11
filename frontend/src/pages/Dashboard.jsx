@@ -171,7 +171,7 @@ export default function Dashboard() {
         >
            {/* ... Accordion Content (Summary, Details, LocationAccordion) ... */}
            {/* (This part of your code was fine, no changes needed here) */}
-           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+           <AccordionSummary expandIcon={<ExpandMoreIcon color='primary' />}>
               <Grid container alignItems="center" justifyContent="space-between" spacing={1} sx={{ width: '100%', pr: 1 }}>
                 <Grid item xs={12} sm={4}>
                   <Box display="flex" alignItems="center">
@@ -206,9 +206,9 @@ export default function Dashboard() {
                  Storage Locations
                </Typography>
                <Button 
-                 variant="outlined" size="small" startIcon={<AddIcon />} 
+                 variant="contained"  startIcon={<AddIcon />} 
                  onClick={(e) => handleAddLocation(e, warehouse.id)}
-                 sx={{ bgcolor: 'background.paper' }}
+                 
                >
                  Add Location
                </Button>
@@ -355,10 +355,10 @@ function LocationAccordion({ location, onEdit, onDelete, onCardClick }) {
         bgcolor: '#293445' 
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+      <AccordionSummary expandIcon={<ExpandMoreIcon color='primary'/>}>
         <Grid container alignItems="center" justifyContent="space-between" sx={{ width: '100%', pr: 1 }}>
           <Grid item xs={12} sm={4} display="flex" alignItems="center">
-            <FolderIcon color="action" sx={{ mr: 2, fontSize: 24 }} />
+            <FolderIcon color="primary" sx={{ mr: 2, fontSize: 24 }} />
             <Typography fontWeight="bold" variant="subtitle1">{location.name}</Typography>
           </Grid>
 
