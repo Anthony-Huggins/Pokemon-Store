@@ -2,7 +2,8 @@ package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
 import com.skillstorm.pokemonstore.services.ScanService;
-import com.skillstorm.pokemonstore.services.CardLibraryService; 
+import com.skillstorm.pokemonstore.services.CardLibraryService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,60 +24,36 @@ import java.util.Map;
 public class ScanController {
 
 
-
-    private final ScanService ocrService;
-    private final CardLibraryService libraryService; // You'll need this later to search DB
+    private final ScanService scanService;
 
     /**
      * Constructs a new ScanController with the required services.
      *
-     * @param ocrService     The service responsible for performing OCR (Optical Character Recognition) on images.
-     * @param libraryService The service responsible for searching the internal card database.
+     * @param scanService     The service responsible for performing OCR (Optical Character Recognition) on images.
      */
-    public ScanController(ScanService ocrService, CardLibraryService libraryService) {
-        this.ocrService = ocrService;
-        this.libraryService = libraryService;
+    public ScanController(ScanService scanService) {
+        this.scanService = scanService;
+
     }
 
 
-    /**
-     * Identifies a Pokémon card from a provided image.
-     * <p>
-     * This endpoint performs the following steps:
-     * <ol>
-     * <li>Accepts a JSON payload containing a Base64 encoded image string.</li>
-     * <li>Sends the image to the {@link ScanService} (Google Cloud Vision) to extract raw text.</li>
-     * <li>Passes the extracted text to {@link CardLibraryService} to identify potential card matches in the database.</li>
-     * <li>Returns a list of matching {@link CardDefinition} objects.</li>
-     * </ol>
-     * </p>
-     *
-     * @param payload A Map containing the key "image" with the Base64 string value.
-     * @return A {@link ResponseEntity} containing a List of {@link CardDefinition} matches if successful,
-     * or an error message if the scan or processing fails.
-     */
+   
     @PostMapping("/identify")
     public ResponseEntity<?> identifyCard(@RequestBody Map<String, String> payload) {
         try {
             String base64Image = payload.get("image");
-            if (base64Image == null) return ResponseEntity.badRequest().body("No image provided");
+            if (base64Image == null || base64Image.isBlank()) {
+                return ResponseEntity.badRequest().body("No image provided");
+            }
 
-            System.out.println("Processing Scan... (" + base64Image.length() + " chars)");
-
-            // 1. Get Text from Google
-            String detectedText = ocrService.detectText(base64Image);
-            
-            // 2. Find Matches using our new Service
-            List<CardDefinition> matches = libraryService.findMatchesFromScan(detectedText);
-            
-            System.out.println("Found " + matches.size() + " matches in DB.");
+            // Delegate all logic to the service
+            List<CardDefinition> matches = scanService.identifyBestMatch(base64Image);
 
             return ResponseEntity.ok(matches);
 
-
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Error processing scan: " + e.getMessage());
         }
     }
 }

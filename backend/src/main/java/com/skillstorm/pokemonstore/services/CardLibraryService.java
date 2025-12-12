@@ -5,10 +5,7 @@ import com.skillstorm.pokemonstore.models.CardSet;
 import com.skillstorm.pokemonstore.repositories.CardDefinitionRepository;
 import com.skillstorm.pokemonstore.repositories.CardSetRepository;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -88,55 +85,5 @@ public class CardLibraryService {
         return setRepo.findAll(Sort.by("name"));
     }
 
-    /**
-     * Finds and returns a list of card definitions that match the given scan text.
-     * @param scanText
-     * @return
-     */
-    public List<CardDefinition> findMatchesFromScan(String scanText) {
-        if (scanText == null || scanText.isEmpty()) return new ArrayList<>();
-
-        System.out.println("Analyzing OCR Text...");
-        List<CardDefinition> matches = new ArrayList<>();
-
-        // split the text into by newlines
-        String[] lines = scanText.split("\n");
-
-        Integer detectedHp = null;
-        Pattern hpPattern = Pattern.compile("\\b\\d{2,3}\\b");
-        // 1. EXTRACT HP using Regex (Looks for 2-3 digits in first 5 lines )
-        for (int i = 0; i < 5; i++) {
-            Matcher hpMatcher = hpPattern.matcher(lines[i]);
-            if (hpMatcher.find()) {
-                detectedHp = Integer.parseInt(hpMatcher.group(0));
-                System.out.println("Detected HP: " + detectedHp);
-                break;
-            }
-        }
-
-        // search for name with extracted HP for first 5 lines.
-        for (int i = 0; i < 5; i++) {
-            System.out.println("Searching for card with name: " + lines[i].trim());
-
-            if (lines[i].trim().equalsIgnoreCase("basic")){
-                continue;
-            }
-
-            matches = cardRepo.searchCards(
-                lines[i].trim(),
-                null,
-                null,
-                null,
-                detectedHp,
-                PageRequest.of(0, 100)
-            ).getContent();
-
-            // if a match is found, return it
-            if (!matches.isEmpty()) {
-                return matches;
-            }
-            
-        }
-        return matches;
-    }
+    
 }
