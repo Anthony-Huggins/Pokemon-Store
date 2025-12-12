@@ -164,7 +164,7 @@ export default function InventoryItemForm({
         {/* 1. Warehouse (Parent Dropdown) */}
         <Grid size={6}>
           <TextField
-            select fullWidth label="Warehouse" name="warehouseId"
+            select fullWidth label="Store" name="warehouseId"
             value={formData.warehouseId} onChange={handleChange} size="small"
           >
             {warehouses.map(w => (

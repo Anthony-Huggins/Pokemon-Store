@@ -159,7 +159,7 @@ export default function Dashboard() {
             setModalOpen(true);        // 2. Open
           }}
         >
-          New Warehouse
+          New Store
         </Button>
       </Box>
 

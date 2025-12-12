@@ -282,7 +282,7 @@ export default function Inventory() {
           {/* Warehouse Dropdown */}
           <TextField 
             select 
-            label="Warehouse" 
+            label="Store" 
             name="warehouseId" 
             value={filters.warehouseId} 
             onChange={handleFilterChange} 
