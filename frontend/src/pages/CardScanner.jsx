@@ -9,10 +9,6 @@ import api from '../api/axiosConfig';
 import InventoryCard from '../components/InventoryCard';
 import CardDetailModal from '../components/CardDetailModal'; 
 
-/**
- * CardScanner Page (Live Mode Edition)
- * Allows users to capture a card image via webcam (manual or live) and find matches in the DB.
- */
 export default function CardScanner() {
   const webcamRef = useRef(null);
   
@@ -20,8 +16,6 @@ export default function CardScanner() {
   const [scanning, setScanning] = useState(false);
   const [matches, setMatches] = useState([]); 
   const [isLive, setIsLive] = useState(false); 
-  
-  // New State: Remembers if we were live before opening the modal
   const [wasLiveBeforeModal, setWasLiveBeforeModal] = useState(false);
 
   // Data State
@@ -32,7 +26,6 @@ export default function CardScanner() {
   const [modalOpen, setModalOpen] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', type: 'success' });
 
-  // Load Warehouses
   useEffect(() => {
     api.get('/warehouses').then(res => setWarehouses(res.data)).catch(console.error);
   }, []);
@@ -67,72 +60,80 @@ export default function CardScanner() {
   useEffect(() => {
     let intervalId;
     if (isLive) {
-      // Scan every 2.5 seconds
       intervalId = setInterval(() => {
         if (!scanning) capture();
-      }, 2500); 
+      }, 100); 
     }
     return () => clearInterval(intervalId);
   }, [isLive, scanning, capture]);
 
   // --- HANDLERS ---
-  
-  /**
-   * Pauses live scanning and opens the modal.
-   * Remembers previous state to resume later.
-   */
   const handleCardClick = (card) => {
-    setWasLiveBeforeModal(isLive); // 1. Remember current state
-    setIsLive(false);              // 2. Pause scanning
+    setWasLiveBeforeModal(isLive); 
+    setIsLive(false);              
     setSelectedCard(card);
     setModalOpen(true);
   };
 
-  /**
-   * Closes the modal and restores Live Mode if it was active previously.
-   */
   const handleModalClose = () => {
     setModalOpen(false);
     setSelectedCard(null);
-
-    // 3. Restore state
     if (wasLiveBeforeModal) {
       setIsLive(true);
     }
-    setWasLiveBeforeModal(false); // Reset memory
+    setWasLiveBeforeModal(false);
   };
 
   const handleAddCard = async (newItemPayload) => {
     try {
       await api.post('/inventory', newItemPayload);
       setNotification({ open: true, message: 'Card added!', type: 'success' });
-      
-      // Use the shared close handler so it ALSO restores live mode
       handleModalClose(); 
     } catch (error) {
-       const msg = 'Storage location full. Please pick a diffrent one.';
+       const msg = 'Storage location full. Please pick a different one.';
        setNotification({ open: true, message: msg, type: 'error' });
     }
   };
 
   return (
+    // Changed maxWidth to "lg" to keep it centered and not too wide
     <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom align="center">
+      <Typography variant="h4" fontWeight="bold" gutterBottom align="center" sx={{ mb: 4 }}>
         Card Scanner
       </Typography>
 
-      {/* CAMERA SECTION */}
-      <Grid container justifyContent="center" sx={{ mb: 4 }}>
-        <Grid item xs={12} md={8} lg={6}>
-          <Paper elevation={3} sx={{ p: 2, bgcolor: '#000', textAlign: 'center', borderRadius: 2 }}>
+      {/* alignItems="stretch" -> Makes both columns equal height 
+         justifyContent="center" -> Centers the columns in the container
+      */}
+      <Grid container spacing={4} alignItems="stretch" justifyContent="center">
+        
+        {/* LEFT COLUMN: CAMERA */}
+        <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={3} sx={{ 
+              p: 2, 
+              bgcolor: '#000', 
+              borderRadius: 2, 
+              height: '100%',
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center', // Centers camera vertically if right side is taller
+              alignItems: 'center'
+          }}>
             
             {/* Viewport */}
             <Box sx={{ 
-              height: 400, bgcolor: '#222', borderRadius: 1, mb: 2,
-              display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden',
+              width: '100%', // Fill the paper
+              height: 500,   // Fixed height for camera viewport
+              bgcolor: '#222', 
+              borderRadius: 1, 
+              mb: 2,
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              overflow: 'hidden',
               position: 'relative'
             }}>
-               <Webcam
+                <Webcam
                   audio={false}
                   ref={webcamRef}
                   screenshotFormat="image/jpeg"
@@ -140,26 +141,12 @@ export default function CardScanner() {
                   style={{ objectFit: 'contain' }}
                 />
                 
-                {/* Live Indicator Overlay */}
-                {isLive && (
-                  <Box sx={{ 
-                    position: 'absolute', top: 10, right: 10, 
-                    bgcolor: 'rgba(255, 0, 0, 0.7)', color: 'white', 
-                    px: 1, py: 0.5, borderRadius: 1, fontSize: '0.75rem', fontWeight: 'bold'
-                  }}>
-                    LIVE {scanning ? "..." : ""}
-                  </Box>
-                )}
             </Box>
             
-            {/* CONTROLS ROW */}
-            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center">
-              
-              {/* Capture Button */}
+            {/* CONTROLS */}
+            <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ width: '100%' }}>
               <Button 
-                variant="contained" 
-                size="large" 
-                onClick={capture} 
+                variant="contained" size="large" onClick={capture} 
                 startIcon={<CameraAltIcon />}
                 disabled={isLive || scanning} 
                 sx={{ minWidth: 200 }}
@@ -167,7 +154,6 @@ export default function CardScanner() {
                 {isLive ? "Scanning..." : "Capture Photo"}
               </Button>
 
-              {/* Live Toggle */}
               <Box sx={{ bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, px: 2, py: 0.5 }}>
                 <FormControlLabel
                   control={
@@ -177,45 +163,72 @@ export default function CardScanner() {
                       color="error" 
                     />
                   }
-                  label={
-                    <Typography variant="body2" color="white" fontWeight="bold">
-                      Live Mode
-                    </Typography>
-                  }
+                  label={<Typography variant="body2" color="white" fontWeight="bold">Live Mode</Typography>}
                   sx={{ mr: 0 }} 
                 />
               </Box>
-
             </Stack>
-
           </Paper>
         </Grid>
+
+        {/* RIGHT COLUMN: RESULTS */}
+        <Grid item xs={12} md={5} sx={{ display: 'flex', flexDirection: 'column' }}>
+           <Paper sx={{ 
+              p: 3, 
+              height: '100%', 
+              display: 'flex', 
+              flexDirection: 'column', 
+              bgcolor: '#0f172a', 
+              border: '1px solid #1e293b' 
+           }}>
+              <Typography variant="h5" color="white" align="center" sx={{ borderBottom: '1px solid #334155', pb: 2 }}>
+                Detected Card
+              </Typography>
+
+              {/* FlexGrow makes this Box fill all remaining space, centering content vertically */}
+              <Box sx={{ 
+                  flexGrow: 1, 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  width: '100%',
+                  mt: 2
+              }}>
+                  {matches.length > 0 ? (
+                    <Box sx={{ width: '100%', maxWidth: 280 }}>
+                       {matches.map((card) => (
+                          <Box key={card.id}>
+                            <InventoryCard 
+                               card={card} 
+                               onClick={() => handleCardClick(card)} 
+                            />
+                            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 2 }}>
+                               Click card to add to inventory
+                            </Typography>
+                          </Box>
+                       ))}
+                    </Box>
+                  ) : (
+                    <Box sx={{ opacity: 0.5, textAlign: 'center' }}>
+                       <CameraAltIcon sx={{ fontSize: 80, color: 'text.secondary', mb: 2 }} />
+                       <Typography variant="h6" color="text.secondary">
+                         {isLive ? "Scanning..." : "No card detected"}
+                       </Typography>
+                       <Typography variant="body2" color="text.secondary">
+                         Place a card in view and capture.
+                       </Typography>
+                    </Box>
+                  )}
+              </Box>
+           </Paper>
+        </Grid>
+
       </Grid>
 
-      {/* RESULTS SECTION */}
-      {matches.length > 0 && (
-        <Box>
-           <Typography variant="h5" gutterBottom sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-             Matches Found ({matches.length})
-           </Typography>
-           
-           <Grid container spacing={2}>
-             {matches.map((card) => (
-               <Grid key={card.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
-                 <InventoryCard 
-                    card={card} 
-                    onClick={() => handleCardClick(card)} 
-                 />
-               </Grid>
-             ))}
-           </Grid>
-        </Box>
-      )}
-
-      {/* MODAL & TOASTS */}
       <CardDetailModal 
         open={modalOpen} 
-        onClose={handleModalClose} // Now uses the smart handler
+        onClose={handleModalClose} 
         card={selectedCard} 
         warehouses={warehouses}
         onSubmit={handleAddCard} 
