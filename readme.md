@@ -5,7 +5,7 @@ A full-stack inventory management system designed for high-volume trading card c
 ## 🚀 Key Features
 
 * **Hybrid Card Scanner:** Identifies cards using a two-stage pipeline: Google Cloud Vision (OCR) for text candidate narrowing, followed by OpenCV (ORB Feature Matching) for precise visual re-ranking.
-* **Warehouse Management:** Hierarchical storage system (Stores -> Warehouses -> Locations -> Cards) with capacity tracking.
+* **Warehouse Management:** Hierarchical storage system ( Warehouses -> Locations -> Cards) with capacity tracking.
 * **Live Pricing:** Server-Sent Events (SSE) integration to sync real-time market prices for over 20,000 cards via TCGdex.
 * **Virtual Sorting:** Custom Hibernate `@Formula` implementation allows sorting mixed datasets (manual prices vs. live market prices + markup) seamlessly.
 * **Interactive Dashboard:** A React-based UI with dark mode, responsive grids, and live webcam integration.
