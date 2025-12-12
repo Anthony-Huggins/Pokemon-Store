@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
   Box, Grid, Paper, Pagination, Typography, LinearProgress, Snackbar, Alert,
-  Stack, TextField, MenuItem, Button, InputAdornment
+  Stack, TextField, MenuItem, InputAdornment
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import api from '../api/axiosConfig';
 import InventoryCard from '../components/InventoryCard';
 import CardDetailModal from '../components/CardDetailModal';
@@ -15,22 +14,18 @@ const rarities = ["ACE SPEC Rare","Amazing Rare","Black White Rare","Classic Col
 
 /**
  * Main Card Library Page.
- * <p>
  * Displays a paginated grid of the master card database.
  * Allows users to browse all 22,000+ cards and add specific instances to their inventory.
- * </p>
- *
- * @component
  */
 export default function CardLibrary() {
   // --- State ---
   const [cards, setCards] = useState([]);
-  const [warehouses, setWarehouses] = useState([]); // Needed for the "Add to Inventory" dropdowns
+  const [warehouses, setWarehouses] = useState([]);
   const [sets, setSets] = useState([]);
   const [loading, setLoading] = useState(false);
   
   // Pagination State
-  const [page, setPage] = useState(1); // MUI Pagination is 1-indexed
+  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState({
     name: '',
@@ -39,7 +34,7 @@ export default function CardLibrary() {
     setId: '',
     hp: ''
   });
-  const PAGE_SIZE = 24; // 6 cols x 4 rows
+  const PAGE_SIZE = 24;
 
   // Modal & Notification State
   const [selectedCard, setSelectedCard] = useState(null);
@@ -55,23 +50,14 @@ export default function CardLibrary() {
     }
   };
 
-  /**
-   * Fetches warehouses and sets on mount.
-   */
   useEffect(() => {
     fetchWarehouses();
     api.get('/library/sets').then(res => setSets(res.data));
   }, []);
 
-  /**
-   * Fetches cards from the backend based on current filters and pagination.
-   * 
-   */
   const fetchCards = async () => {
     setLoading(true);
     try {
-      // 1. Create a clean params object
-      // We only want to include keys that actually have a value
       const activeFilters = {};
       
       Object.keys(filters).forEach(key => {
@@ -80,17 +66,13 @@ export default function CardLibrary() {
         }
       });
 
-      // 2. Determine Endpoint
-      // If we have any active filters (keys > 0), use search. Otherwise get all.
-      const hasActiveFilters = Object.keys(activeFilters).length > 0;
-      const endpoint =  '/library';
+      const endpoint = '/library';
 
-      // 3. Send Request
       const response = await api.get(endpoint, {
         params: {
           page: page - 1, 
           size: PAGE_SIZE,
-          ...activeFilters // <--- Only send the non-empty filters
+          ...activeFilters
         }
       });
 
@@ -103,52 +85,38 @@ export default function CardLibrary() {
     }
   };
 
-  /**
-   * 
-   * Effect to fetch cards when page or filters change.
-   */
+  // --- AUTOMATIC SEARCH EFFECT ---
+  // This replaces the old useEffect that only watched 'page'.
+  // Now it watches 'page' AND 'filters'.
   useEffect(() => {
-    fetchCards();
-  }, [page]);
+    // We use a timer (debounce) to wait until you stop typing before searching.
+    // This prevents the app from freezing or spamming the server while you type "Charizard".
+    const timer = setTimeout(() => {
+      fetchCards();
+    }, 500); // 500ms delay
 
-  /**
-   * Handles page changes from the Pagination component.
-   * @param {React.ChangeEvent<unknown>} event - The change event.
-   * @param {number} value - The new page number.
-   */
+    // Cleanup: If you type again before 500ms, cancel the previous timer.
+    return () => clearTimeout(timer);
+  }, [page, filters]); 
+
   const handlePageChange = (event, value) => {
     setPage(value);
   };
+
   const handleFilterChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
     setPage(1); // Reset to page 1 on filter change
   };
 
-  /**
-   * Handles the Search button click to fetch cards based on current filters.
-   *
-   */
-  const handleSearchClick = () => {
-    setPage(1);
-    fetchCards();
-  };
-
-  /**
-   * Submits a new Inventory Item to the backend.
-   * @param {object} newItemPayload - The JSON body constructed by the form.
-   */
   const handleAddCard = async (newItemPayload) => {
     try {
       await api.post('/inventory', newItemPayload);
-
-      fetchWarehouses(); // Refresh warehouse data to update counts
-
+      fetchWarehouses(); 
       setNotification({ open: true, message: 'Card added to Inventory!', type: 'success' });
       setModalOpen(false);
     } catch (error) {
       console.error("Add failed:", error);
-      // Extract specific error message from backend if available
-      const msg = 'Storage location full. Please pick a diffrent one.';
+      const msg = 'Storage location full. Please pick a different one.';
       setNotification({ open: true, message: msg, type: 'error' });
     }
   };
@@ -160,18 +128,14 @@ export default function CardLibrary() {
       <Paper sx={{ p: 2, mb: 3 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-            <Typography variant="h6" fontWeight="bold"> Card Library</Typography>
+            <Typography variant="h6" fontWeight="bold">Card Library</Typography>
           </Box>
 
           <TextField 
             label="Search Name" name="name" 
             value={filters.name} onChange={handleFilterChange} size="small" sx={{ flexGrow: 1 }}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSearchClick();
-              }
-            }}
+            // Removed onKeyDown (Enter key) as it's no longer needed
           />
 
           <TextField select label="Set" name="setId" value={filters.setId} onChange={handleFilterChange} size="small" sx={{ width: 150 }}>
@@ -190,30 +154,29 @@ export default function CardLibrary() {
           </TextField>
           
           <TextField 
-            label="HP" // Just "HP" implies exact
-            name="hp"  // Match state name
+            label="HP"
+            name="hp"
             type="number"
             value={filters.hp} 
             onChange={handleFilterChange} 
             size="small" 
-            sx={{ width: 80 }} // Made slightly narrower
+            sx={{ width: 80 }}
             InputProps={{ inputProps: { min: 0, step: 10 } }}
           />
-
-          <Button variant="contained" onClick={handleSearchClick}>Search</Button>
+          
+          {/* Removed the "Search" Button */}
         </Stack>
       </Paper>
       
-      {/* Top Bar (Pagination) */}
-      {/* PAGINATION (Top) */}
+      {/* PAGINATION */}
       <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
         <Pagination count={totalPages} page={page} onChange={(e, v) => { setPage(v); window.scrollTo({top:0, behavior:'smooth'}); }} color="primary" showFirstButton showLastButton />
       </Box>
 
-    
-
+      {/* CARD GRID */}
       <Grid container spacing={2}>
         {cards.map((card) => (
+          // Grid v6 syntax or v5 syntax depending on your setup. Assuming v6 based on your provided code "size={{...}}"
           <Grid key={card.id} size={{ xs: 6, sm: 4, md: 3, lg: 2 }}>
             <InventoryCard 
               card={card} 
@@ -227,10 +190,9 @@ export default function CardLibrary() {
       <CardDetailModal 
         open={modalOpen} 
         onClose={() => setModalOpen(false)} 
-        card={selectedCard} // Pass 'card' to trigger Library Mode
+        card={selectedCard} 
         warehouses={warehouses}
-        onSubmit={handleAddCard} // Map the Add handler to onSubmit
-        // onDelete is not passed, so the delete button will be hidden automatically
+        onSubmit={handleAddCard} 
       />
 
       {/* Notifications */}
