@@ -21,12 +21,12 @@ import org.springframework.stereotype.Service;
  * </p>
  */
 @Service
-public class CardLibraryService {
+public class CardDefinitionService {
 
     private final CardDefinitionRepository cardRepo;
     private final CardSetRepository setRepo;
 
-    public CardLibraryService(CardDefinitionRepository cardRepo, CardSetRepository setRepo) {
+    public CardDefinitionService(CardDefinitionRepository cardRepo, CardSetRepository setRepo) {
         this.cardRepo = cardRepo;
         this.setRepo = setRepo;
     }

@@ -2,7 +2,7 @@ package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
 import com.skillstorm.pokemonstore.models.CardSet;
-import com.skillstorm.pokemonstore.services.CardLibraryService;
+import com.skillstorm.pokemonstore.services.CardDefinitionService;
 
 import java.util.List;
 
@@ -21,15 +21,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/library")
 @CrossOrigin(origins = "http://localhost:5173")
-public class CardLibraryController {
+public class CardDefinitionController {
 
-    private final CardLibraryService libraryService;
+    private final CardDefinitionService libraryService;
 
     /**
      * Constructor injection for the Library Service.
      * @param libraryService Service handling card definition retrieval.
      */
-    public CardLibraryController(CardLibraryService libraryService) {
+    public CardDefinitionController(CardDefinitionService libraryService) {
         this.libraryService = libraryService;
     }
 

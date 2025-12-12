@@ -2,7 +2,7 @@ package com.skillstorm.pokemonstore.controllers;
 
 import com.skillstorm.pokemonstore.models.CardDefinition;
 import com.skillstorm.pokemonstore.services.ScanService;
-import com.skillstorm.pokemonstore.services.CardLibraryService;
+import com.skillstorm.pokemonstore.services.CardDefinitionService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ import java.util.Map;
  * <p>
  * This controller serves as the entry point for the "Card Scanner" feature. It accepts
  * Base64-encoded images from the frontend, delegates OCR processing to the {@link ScanService},
- * and then queries the database via the {@link CardLibraryService} to find matching Pokémon cards.
+ * and then queries the database via the {@link CardDefinitionService} to find matching Pokémon cards.
  * </p>
  */
 @RestController
