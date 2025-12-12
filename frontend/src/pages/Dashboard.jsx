@@ -79,7 +79,7 @@ export default function Dashboard() {
 
   const handleDelete = async (e, id, type) => {
     e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete this ${type}?`)) return;
+    if (!window.confirm(`Are you sure you want to delete this ${type === 'WAREHOUSE' ? "store" : 'storage location'}?`)) return;
 
     try {
       const endpoint = type === 'WAREHOUSE' ? `/warehouses/${id}` : `/locations/${id}`;
