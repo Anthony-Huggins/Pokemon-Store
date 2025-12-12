@@ -84,8 +84,18 @@ export default function Dashboard() {
     try {
       const endpoint = type === 'WAREHOUSE' ? `/warehouses/${id}` : `/locations/${id}`;
       await api.delete(endpoint);
-      fetchWarehouses(); 
       setNotification({ open: true, message: `${type} deleted successfully`, type: 'success' });
+
+      if (type === 'WAREHOUSE') {
+        setWarehouses((prev) => prev.filter((w) => w.id !== id));
+      }
+      else {
+        setWarehouses((prev) => prev.map((wh) => ({
+            ...wh,
+            storageLocations: wh.storageLocations.filter((loc) => loc.id !== id)
+        })));
+      }
+
     } catch (err) {
       console.error("Delete failed", err);
       setNotification({ open: true, message: "Delete failed", type: 'error' });
